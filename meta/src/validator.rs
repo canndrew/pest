@@ -17,7 +17,7 @@ use parser::{ParserExpr, ParserNode, ParserRule, Rule};
 use UNICODE_PROPERTY_NAMES;
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn validate_pairs(pairs: Pairs<Rule>) -> Result<Vec<&str>, Vec<Error<Rule>>> {
+pub fn validate_pairs(pairs: Pairs<Rule>) -> Result<Vec<Span>, Vec<Error<Rule>>> {
     let mut rust_keywords = HashSet::new();
     rust_keywords.insert("abstract");
     rust_keywords.insert("alignof");
@@ -106,12 +106,12 @@ pub fn validate_pairs(pairs: Pairs<Rule>) -> Result<Vec<&str>, Vec<Error<Rule>>>
     builtins.insert("NEWLINE");
     builtins.extend(UNICODE_PROPERTY_NAMES);
 
-    let definitions: Vec<_> = pairs
+    let definitions: Vec<Span> = pairs
         .clone()
         .filter(|pair| pair.as_rule() == Rule::grammar_rule)
         .map(|pair| pair.into_inner().next().unwrap().as_span())
         .collect();
-    let called_rules: Vec<_> = pairs
+    let called_rules: Vec<Span> = pairs
         .clone()
         .filter(|pair| pair.as_rule() == Rule::grammar_rule)
         .flat_map(|pair| {
@@ -135,16 +135,22 @@ pub fn validate_pairs(pairs: Pairs<Rule>) -> Result<Vec<&str>, Vec<Error<Rule>>>
     }
 
     let definitions: HashSet<_> = definitions.iter().map(|span| span.as_str()).collect();
-    let called_rules: HashSet<_> = called_rules.iter().map(|span| span.as_str()).collect();
+    let defaults = {
+        let mut defaults = Vec::new();
+        for called_rule in &called_rules {
+            if !definitions.contains(called_rule.as_str()) {
+                defaults.push(called_rule.clone());
+            }
+        }
+        defaults
+    };
 
-    let defaults = called_rules.difference(&definitions);
-
-    Ok(defaults.cloned().collect())
+    Ok(defaults)
 }
 
 #[allow(clippy::implicit_hasher, clippy::ptr_arg)]
-pub fn validate_rust_keywords<'i>(
-    definitions: &Vec<Span<'i>>,
+pub fn validate_rust_keywords(
+    definitions: &Vec<Span>,
     rust_keywords: &HashSet<&str>,
 ) -> Vec<Error<Rule>> {
     let mut errors = vec![];
@@ -166,8 +172,8 @@ pub fn validate_rust_keywords<'i>(
 }
 
 #[allow(clippy::implicit_hasher, clippy::ptr_arg)]
-pub fn validate_pest_keywords<'i>(
-    definitions: &Vec<Span<'i>>,
+pub fn validate_pest_keywords(
+    definitions: &Vec<Span>,
     pest_keywords: &HashSet<&str>,
 ) -> Vec<Error<Rule>> {
     let mut errors = vec![];
@@ -212,9 +218,9 @@ pub fn validate_already_defined(definitions: &Vec<Span>) -> Vec<Error<Rule>> {
 }
 
 #[allow(clippy::implicit_hasher, clippy::ptr_arg)]
-pub fn validate_undefined<'i>(
-    definitions: &Vec<Span<'i>>,
-    called_rules: &Vec<Span<'i>>,
+pub fn validate_undefined(
+    definitions: &Vec<Span>,
+    called_rules: &Vec<Span>,
     builtins: &HashSet<&str>,
 ) -> Vec<Error<Rule>> {
     let mut errors = vec![];
@@ -237,7 +243,7 @@ pub fn validate_undefined<'i>(
 }
 
 #[allow(clippy::ptr_arg)]
-pub fn validate_ast<'a, 'i: 'a>(rules: &'a Vec<ParserRule<'i>>) -> Vec<Error<Rule>> {
+pub fn validate_ast<'a>(rules: &'a Vec<ParserRule>) -> Vec<Error<Rule>> {
     let mut errors = vec![];
 
     errors.extend(validate_repetition(rules));
@@ -253,9 +259,9 @@ pub fn validate_ast<'a, 'i: 'a>(rules: &'a Vec<ParserRule<'i>>) -> Vec<Error<Rul
     errors
 }
 
-fn is_non_progressing<'i>(
-    expr: &ParserExpr<'i>,
-    rules: &HashMap<String, &ParserNode<'i>>,
+fn is_non_progressing(
+    expr: &ParserExpr,
+    rules: &HashMap<String, &ParserNode>,
     trace: &mut Vec<String>,
 ) -> bool {
     match *expr {
@@ -291,9 +297,9 @@ fn is_non_progressing<'i>(
     }
 }
 
-fn is_non_failing<'i>(
-    expr: &ParserExpr<'i>,
-    rules: &HashMap<String, &ParserNode<'i>>,
+fn is_non_failing(
+    expr: &ParserExpr,
+    rules: &HashMap<String, &ParserNode>,
     trace: &mut Vec<String>,
 ) -> bool {
     match *expr {
@@ -323,7 +329,7 @@ fn is_non_failing<'i>(
     }
 }
 
-fn validate_repetition<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rule>> {
+fn validate_repetition<'a>(rules: &'a [ParserRule]) -> Vec<Error<Rule>> {
     let mut result = vec![];
     let map = to_hash_map(rules);
 
@@ -367,7 +373,7 @@ fn validate_repetition<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rul
     result
 }
 
-fn validate_choices<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rule>> {
+fn validate_choices<'a>(rules: &'a [ParserRule]) -> Vec<Error<Rule>> {
     let mut result = vec![];
     let map = to_hash_map(rules);
 
@@ -404,7 +410,7 @@ fn validate_choices<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rule>>
     result
 }
 
-fn validate_whitespace_comment<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rule>> {
+fn validate_whitespace_comment<'a>(rules: &'a [ParserRule]) -> Vec<Error<Rule>> {
     let map = to_hash_map(rules);
 
     rules
@@ -441,19 +447,19 @@ fn validate_whitespace_comment<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<E
         .collect()
 }
 
-fn validate_left_recursion<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> Vec<Error<Rule>> {
+fn validate_left_recursion<'a>(rules: &'a [ParserRule]) -> Vec<Error<Rule>> {
     left_recursion(to_hash_map(rules))
 }
 
-fn to_hash_map<'a, 'i: 'a>(rules: &'a [ParserRule<'i>]) -> HashMap<String, &'a ParserNode<'i>> {
+fn to_hash_map<'a>(rules: &'a [ParserRule]) -> HashMap<String, &'a ParserNode> {
     rules.iter().map(|r| (r.name.clone(), &r.node)).collect()
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn left_recursion<'a, 'i: 'a>(rules: HashMap<String, &'a ParserNode<'i>>) -> Vec<Error<Rule>> {
-    fn check_expr<'a, 'i: 'a>(
-        node: &'a ParserNode<'i>,
-        rules: &'a HashMap<String, &ParserNode<'i>>,
+fn left_recursion<'a>(rules: HashMap<String, &'a ParserNode>) -> Vec<Error<Rule>> {
+    fn check_expr<'a>(
+        node: &'a ParserNode,
+        rules: &'a HashMap<String, &ParserNode>,
         trace: &mut Vec<String>,
     ) -> Option<Error<Rule>> {
         match node.expr.clone() {

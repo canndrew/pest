@@ -9,7 +9,8 @@
 
 use alloc::rc::Rc;
 use alloc::vec::Vec;
-use core::fmt;
+use std::fmt;
+use std::sync::Arc;
 
 use super::pair::{self, Pair};
 use super::queueable_token::QueueableToken;
@@ -20,12 +21,12 @@ use RuleType;
 ///
 /// [`Pair`]: struct.Pair.html
 /// [`Pairs::flatten`]: struct.Pairs.html#method.flatten
-pub struct FlatPairs<'i, R> {
+pub struct FlatPairs<R> {
     /// # Safety
     ///
     /// All `QueueableToken`s' `input_pos` must be valid character boundary indices into `input`.
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &'i str,
+    input: Arc<str>,
     start: usize,
     end: usize,
 }
@@ -35,7 +36,7 @@ pub struct FlatPairs<'i, R> {
 /// All `QueueableToken`s' `input_pos` must be valid character boundary indices into `input`.
 pub unsafe fn new<R: RuleType>(
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &str,
+    input: Arc<str>,
     start: usize,
     end: usize,
 ) -> FlatPairs<R> {
@@ -47,7 +48,7 @@ pub unsafe fn new<R: RuleType>(
     }
 }
 
-impl<'i, R: RuleType> FlatPairs<'i, R> {
+impl<R: RuleType> FlatPairs<R> {
     /// Returns the `Tokens` for these pairs.
     ///
     /// # Examples
@@ -71,7 +72,7 @@ impl<'i, R: RuleType> FlatPairs<'i, R> {
     /// assert_eq!(tokens.len(), 2);
     /// ```
     #[inline]
-    pub fn tokens(self) -> Tokens<'i, R> {
+    pub fn tokens(self) -> Tokens<R> {
         tokens::new(self.queue, self.input, self.start, self.end)
     }
 
@@ -99,15 +100,15 @@ impl<'i, R: RuleType> FlatPairs<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> Iterator for FlatPairs<'i, R> {
-    type Item = Pair<'i, R>;
+impl<R: RuleType> Iterator for FlatPairs<R> {
+    type Item = Pair<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start >= self.end {
             return None;
         }
 
-        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input, self.start) };
+        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input.clone(), self.start) };
 
         self.next_start();
 
@@ -115,7 +116,7 @@ impl<'i, R: RuleType> Iterator for FlatPairs<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> DoubleEndedIterator for FlatPairs<'i, R> {
+impl<R: RuleType> DoubleEndedIterator for FlatPairs<R> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.end <= self.start {
             return None;
@@ -123,13 +124,13 @@ impl<'i, R: RuleType> DoubleEndedIterator for FlatPairs<'i, R> {
 
         self.next_start_from_end();
 
-        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input, self.end) };
+        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input.clone(), self.end) };
 
         Some(pair)
     }
 }
 
-impl<'i, R: RuleType> fmt::Debug for FlatPairs<'i, R> {
+impl<R: RuleType> fmt::Debug for FlatPairs<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FlatPairs")
             .field("pairs", &self.clone().collect::<Vec<_>>())
@@ -137,11 +138,11 @@ impl<'i, R: RuleType> fmt::Debug for FlatPairs<'i, R> {
     }
 }
 
-impl<'i, R: Clone> Clone for FlatPairs<'i, R> {
-    fn clone(&self) -> FlatPairs<'i, R> {
+impl<R: Clone> Clone for FlatPairs<R> {
+    fn clone(&self) -> FlatPairs<R> {
         FlatPairs {
             queue: Rc::clone(&self.queue),
-            input: self.input,
+            input: self.input.clone(),
             start: self.start,
             end: self.end,
         }

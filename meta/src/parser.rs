@@ -31,27 +31,27 @@ pub fn parse(rule: Rule, data: &str) -> Result<Pairs<Rule>, Error<Rule>> {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ParserRule<'i> {
+pub struct ParserRule {
     pub name: String,
-    pub span: Span<'i>,
+    pub span: Span,
     pub ty: RuleType,
-    pub node: ParserNode<'i>,
+    pub node: ParserNode,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ParserNode<'i> {
-    pub expr: ParserExpr<'i>,
-    pub span: Span<'i>,
+pub struct ParserNode {
+    pub expr: ParserExpr,
+    pub span: Span,
 }
 
-impl<'i> ParserNode<'i> {
+impl ParserNode {
     pub fn filter_map_top_down<F, T>(self, mut f: F) -> Vec<T>
     where
-        F: FnMut(ParserNode<'i>) -> Option<T>,
+        F: FnMut(ParserNode) -> Option<T>,
     {
-        pub fn filter_internal<'i, F, T>(node: ParserNode<'i>, f: &mut F, result: &mut Vec<T>)
+        pub fn filter_internal<F, T>(node: ParserNode, f: &mut F, result: &mut Vec<T>)
         where
-            F: FnMut(ParserNode<'i>) -> Option<T>,
+            F: FnMut(ParserNode) -> Option<T>,
         {
             if let Some(value) = f(node.clone()) {
                 result.push(value);
@@ -110,24 +110,24 @@ impl<'i> ParserNode<'i> {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ParserExpr<'i> {
+pub enum ParserExpr {
     Str(String),
     Insens(String),
     Range(String, String),
     Ident(String),
     PeekSlice(i32, Option<i32>),
-    PosPred(Box<ParserNode<'i>>),
-    NegPred(Box<ParserNode<'i>>),
-    Seq(Box<ParserNode<'i>>, Box<ParserNode<'i>>),
-    Choice(Box<ParserNode<'i>>, Box<ParserNode<'i>>),
-    Opt(Box<ParserNode<'i>>),
-    Rep(Box<ParserNode<'i>>),
-    RepOnce(Box<ParserNode<'i>>),
-    RepExact(Box<ParserNode<'i>>, u32),
-    RepMin(Box<ParserNode<'i>>, u32),
-    RepMax(Box<ParserNode<'i>>, u32),
-    RepMinMax(Box<ParserNode<'i>>, u32, u32),
-    Push(Box<ParserNode<'i>>),
+    PosPred(Box<ParserNode>),
+    NegPred(Box<ParserNode>),
+    Seq(Box<ParserNode>, Box<ParserNode>),
+    Choice(Box<ParserNode>, Box<ParserNode>),
+    Opt(Box<ParserNode>),
+    Rep(Box<ParserNode>),
+    RepOnce(Box<ParserNode>),
+    RepExact(Box<ParserNode>, u32),
+    RepMin(Box<ParserNode>, u32),
+    RepMax(Box<ParserNode>, u32),
+    RepMinMax(Box<ParserNode>, u32, u32),
+    Push(Box<ParserNode>),
 }
 
 fn convert_rule(rule: ParserRule) -> AstRule {
@@ -218,14 +218,14 @@ fn consume_rules_with_spans(pairs: Pairs<Rule>) -> Result<Vec<ParserRule>, Vec<E
         .collect()
 }
 
-fn consume_expr<'i>(
-    pairs: Peekable<Pairs<'i, Rule>>,
+fn consume_expr(
+    pairs: Peekable<Pairs<Rule>>,
     climber: &PrecClimber<Rule>,
-) -> Result<ParserNode<'i>, Vec<Error<Rule>>> {
-    fn unaries<'i>(
-        mut pairs: Peekable<Pairs<'i, Rule>>,
+) -> Result<ParserNode, Vec<Error<Rule>>> {
+    fn unaries(
+        mut pairs: Peekable<Pairs<Rule>>,
         climber: &PrecClimber<Rule>,
-    ) -> Result<ParserNode<'i>, Vec<Error<Rule>>> {
+    ) -> Result<ParserNode, Vec<Error<Rule>>> {
         let pair = pairs.next().unwrap();
 
         let node = match pair.as_rule() {
@@ -340,7 +340,7 @@ fn consume_expr<'i>(
 
                 pairs.fold(
                     Ok(node),
-                    |node: Result<ParserNode<'i>, Vec<Error<Rule>>>, pair| {
+                    |node: Result<ParserNode, Vec<Error<Rule>>>, pair| {
                         let node = node?;
 
                         let node = match pair.as_rule() {
@@ -525,10 +525,10 @@ fn consume_expr<'i>(
         Ok(node)
     }
 
-    let term = |pair: Pair<'i, Rule>| unaries(pair.into_inner().peekable(), climber);
-    let infix = |lhs: Result<ParserNode<'i>, Vec<Error<Rule>>>,
-                 op: Pair<'i, Rule>,
-                 rhs: Result<ParserNode<'i>, Vec<Error<Rule>>>| match op.as_rule() {
+    let term = |pair: Pair<Rule>| unaries(pair.into_inner().peekable(), climber);
+    let infix = |lhs: Result<ParserNode, Vec<Error<Rule>>>,
+                 op: Pair<Rule>,
+                 rhs: Result<ParserNode, Vec<Error<Rule>>>| match op.as_rule() {
         Rule::sequence_operator => {
             let lhs = lhs?;
             let rhs = rhs?;

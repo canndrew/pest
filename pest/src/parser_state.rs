@@ -11,7 +11,8 @@ use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::ops::Range;
+use std::ops::Range;
+use std::sync::Arc;
 
 use error::{Error, ErrorVariant};
 use iterators::{pairs, QueueableToken};
@@ -54,15 +55,15 @@ pub enum MatchDir {
 ///
 /// [`Parser`]: trait.Parser.html
 #[derive(Debug)]
-pub struct ParserState<'i, R: RuleType> {
-    position: Position<'i>,
+pub struct ParserState<R: RuleType> {
+    position: Position,
     queue: Vec<QueueableToken<R>>,
     lookahead: Lookahead,
     pos_attempts: Vec<R>,
     neg_attempts: Vec<R>,
     attempt_pos: usize,
     atomicity: Atomicity,
-    stack: Stack<Span<'i>>,
+    stack: Stack<Span>,
 }
 
 /// Creates a `ParserState` from a `&str`, supplying it to a closure `f`.
@@ -74,11 +75,11 @@ pub struct ParserState<'i, R: RuleType> {
 /// let input = "";
 /// pest::state::<(), _>(input, |s| Ok(s)).unwrap();
 /// ```
-pub fn state<'i, R: RuleType, F>(input: &'i str, f: F) -> Result<pairs::Pairs<'i, R>, Error<R>>
+pub fn state<'i, R: RuleType, F>(input: Arc<str>, f: F) -> Result<pairs::Pairs<R>, Error<R>>
 where
-    F: FnOnce(Box<ParserState<'i, R>>) -> ParseResult<Box<ParserState<'i, R>>>,
+    F: FnOnce(Box<ParserState<R>>) -> ParseResult<Box<ParserState<R>>>,
 {
-    let state = ParserState::new(input);
+    let state = ParserState::new(input.clone());
 
     match f(state) {
         Ok(state) => {
@@ -103,7 +104,7 @@ where
     }
 }
 
-impl<'i, R: RuleType> ParserState<'i, R> {
+impl<R: RuleType> ParserState<R> {
     /// Allocates a fresh `ParserState` object to the heap and returns the owned `Box`. This `Box`
     /// will be passed from closure to closure based on the needs of the specified `Parser`.
     ///
@@ -115,7 +116,7 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// let state: Box<pest::ParserState<&str>> = pest::ParserState::new(input);
     /// ```
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(input: &'i str) -> Box<Self> {
+    pub fn new(input: Arc<str>) -> Box<Self> {
         Box::new(ParserState {
             position: Position::from_start(input),
             queue: vec![],
@@ -145,7 +146,7 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// let position = state.position();
     /// assert_eq!(position.pos(), 0);
     /// ```
-    pub fn position(&self) -> &Position<'i> {
+    pub fn position(&self) -> &Position {
         &self.position
     }
 
@@ -881,11 +882,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// ```
     #[inline]
     pub fn stack_peek(self: Box<Self>) -> ParseResult<Box<Self>> {
-        let string = self
+        let span = self
             .stack
             .peek()
             .expect("peek was called on empty stack")
-            .as_str();
+            .clone();
+        let string = span.as_str();
         self.match_string(string)
     }
 
@@ -910,11 +912,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// ```
     #[inline]
     pub fn stack_pop(mut self: Box<Self>) -> ParseResult<Box<Self>> {
-        let string = self
+        let span = self
             .stack
             .pop()
             .expect("pop was called on empty stack")
-            .as_str();
+            .clone();
+        let string = span.as_str();
         self.match_string(string)
     }
 

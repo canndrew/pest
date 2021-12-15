@@ -7,10 +7,10 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::ptr;
-use core::str;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::str;
+use std::sync::Arc;
 
 use position;
 
@@ -18,9 +18,9 @@ use position;
 ///
 /// [two `Position`s]: struct.Position.html#method.span
 /// [`Pair`]: ../iterators/struct.Pair.html#method.span
-#[derive(Clone, Copy)]
-pub struct Span<'i> {
-    input: &'i str,
+#[derive(Clone)]
+pub struct Span {
+    input: Arc<str>,
     /// # Safety
     ///
     /// Must be a valid character boundary index into `input`.
@@ -31,18 +31,18 @@ pub struct Span<'i> {
     end: usize,
 }
 
-impl<'i> Span<'i> {
+impl Span {
     /// Get the original input that this `Span` refers to without being indexed from `start` to
     /// `end`.
-    pub fn input(&self) -> &'i str {
-        self.input
+    pub fn input(&self) -> &str {
+        &self.input
     }
     /// Create a new `Span` without checking invariants. (Checked with `debug_assertions`.)
     ///
     /// # Safety
     ///
     /// `input[start..end]` must be a valid subslice; that is, said indexing should not panic.
-    pub fn new_unchecked(input: &str, start: usize, end: usize) -> Span {
+    pub unsafe fn new_unchecked(input: Arc<str>, start: usize, end: usize) -> Span {
         debug_assert!(input.get(start..end).is_some());
         Span { input, start, end }
     }
@@ -59,7 +59,7 @@ impl<'i> Span<'i> {
     /// assert!(Span::new(input, 0, input.len()).is_some());
     /// ```
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(input: &str, start: usize, end: usize) -> Option<Span> {
+    pub fn new(input: Arc<str>, start: usize, end: usize) -> Option<Span> {
         if input.get(start..end).is_some() {
             Some(Span { input, start, end })
         } else {
@@ -117,9 +117,9 @@ impl<'i> Span<'i> {
     /// assert_eq!(span.start_pos(), start);
     /// ```
     #[inline]
-    pub fn start_pos(&self) -> position::Position<'i> {
+    pub fn start_pos(&self) -> position::Position {
         // Span's start position is always a UTF-8 border.
-        unsafe { position::Position::new_unchecked(self.input, self.start) }
+        unsafe { position::Position::new_unchecked(self.input.clone(), self.start) }
     }
 
     /// Returns the `Span`'s end `Position`.
@@ -136,9 +136,9 @@ impl<'i> Span<'i> {
     /// assert_eq!(span.end_pos(), end);
     /// ```
     #[inline]
-    pub fn end_pos(&self) -> position::Position<'i> {
+    pub fn end_pos(&self) -> position::Position {
         // Span's end position is always a UTF-8 border.
-        unsafe { position::Position::new_unchecked(self.input, self.end) }
+        unsafe { position::Position::new_unchecked(self.input.clone(), self.end) }
     }
 
     /// Splits the `Span` into a pair of `Position`s.
@@ -155,9 +155,9 @@ impl<'i> Span<'i> {
     /// assert_eq!(span.split(), (start, end));
     /// ```
     #[inline]
-    pub fn split(self) -> (position::Position<'i>, position::Position<'i>) {
+    pub fn split(self) -> (position::Position, position::Position) {
         // Span's start and end positions are always a UTF-8 borders.
-        let pos1 = unsafe { position::Position::new_unchecked(self.input, self.start) };
+        let pos1 = unsafe { position::Position::new_unchecked(self.input.clone(), self.start) };
         let pos2 = unsafe { position::Position::new_unchecked(self.input, self.end) };
 
         (pos1, pos2)
@@ -181,7 +181,7 @@ impl<'i> Span<'i> {
     /// assert_eq!(span.as_str(), "b");
     /// ```
     #[inline]
-    pub fn as_str(&self) -> &'i str {
+    pub fn as_str(&self) -> &str {
         // Span's start and end positions are always a UTF-8 borders.
         &self.input[self.start..self.end]
     }
@@ -212,7 +212,7 @@ impl<'i> Span<'i> {
     }
 }
 
-impl<'i> fmt::Debug for Span<'i> {
+impl fmt::Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Span")
             .field("str", &self.as_str())
@@ -222,17 +222,17 @@ impl<'i> fmt::Debug for Span<'i> {
     }
 }
 
-impl<'i> PartialEq for Span<'i> {
-    fn eq(&self, other: &Span<'i>) -> bool {
-        ptr::eq(self.input, other.input) && self.start == other.start && self.end == other.end
+impl PartialEq for Span {
+    fn eq(&self, other: &Span) -> bool {
+        Arc::ptr_eq(&self.input, &other.input) && self.start == other.start && self.end == other.end
     }
 }
 
-impl<'i> Eq for Span<'i> {}
+impl Eq for Span {}
 
-impl<'i> Hash for Span<'i> {
+impl Hash for Span {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (self.input as *const str).hash(state);
+        Arc::as_ptr(&self.input).hash(state);
         self.start.hash(state);
         self.end.hash(state);
     }
@@ -244,7 +244,7 @@ impl<'i> Hash for Span<'i> {
 ///
 /// [`Span::lines()`]: struct.Span.html#method.lines
 pub struct Lines<'i> {
-    span: &'i Span<'i>,
+    span: &'i Span,
     pos: usize,
 }
 
@@ -254,12 +254,14 @@ impl<'i> Iterator for Lines<'i> {
         if self.pos > self.span.end {
             return None;
         }
-        let pos = position::Position::new(self.span.input, self.pos)?;
+        let pos = position::Position::new(self.span.input.clone(), self.pos)?;
         if pos.at_end() {
             return None;
         }
-        let line = pos.line_of();
-        self.pos = pos.find_line_end();
+        let line_start = pos.find_line_start();
+        let line_end = pos.find_line_end();
+        let line = &self.span.input[line_start..line_end];
+        self.pos = line_end;
         Some(line)
     }
 }

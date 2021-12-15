@@ -7,32 +7,32 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use core::cmp::Ordering;
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::ops::Range;
-use core::ptr;
-use core::str;
+use std::cmp::Ordering;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::ops::Range;
+use std::str;
+use std::sync::Arc;
 
 use span;
 
 /// A cursor position in a `&str` which provides useful methods to manually parse that string.
-#[derive(Clone, Copy)]
-pub struct Position<'i> {
-    input: &'i str,
+#[derive(Clone)]
+pub struct Position {
+    input: Arc<str>,
     /// # Safety:
     ///
     /// `input[pos..]` must be a valid codepoint boundary (should not panic when indexing thus).
     pos: usize,
 }
 
-impl<'i> Position<'i> {
+impl Position {
     /// Create a new `Position` without checking invariants. (Checked with `debug_assertions`.)
     ///
     /// # Safety:
     ///
     /// `input[pos..]` must be a valid codepoint boundary (should not panic when indexing thus).
-    pub(crate) unsafe fn new_unchecked(input: &str, pos: usize) -> Position {
+    pub(crate) unsafe fn new_unchecked(input: Arc<str>, pos: usize) -> Position {
         debug_assert!(input.get(pos..).is_some());
         Position { input, pos }
     }
@@ -50,8 +50,11 @@ impl<'i> Position<'i> {
     /// assert_ne!(Position::new(heart, cheart.len_utf8()), None);
     /// ```
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(input: &str, pos: usize) -> Option<Position> {
-        input.get(pos..).map(|_| Position { input, pos })
+    pub fn new(input: Arc<str>, pos: usize) -> Option<Position> {
+        match input.get(pos..) {
+            Some(..) => Some(Position { input, pos }),
+            None => None,
+        }
     }
 
     /// Creates a `Position` at the start of a `&str`.
@@ -64,7 +67,7 @@ impl<'i> Position<'i> {
     /// assert_eq!(start.pos(), 0);
     /// ```
     #[inline]
-    pub fn from_start(input: &'i str) -> Position<'i> {
+    pub fn from_start(input: Arc<str>) -> Position {
         // Position 0 is always safe because it's always a valid UTF-8 border.
         Position { input, pos: 0 }
     }
@@ -103,12 +106,12 @@ impl<'i> Position<'i> {
     /// assert_eq!(span.end(), 0);
     /// ```
     #[inline]
-    pub fn span(&self, other: &Position<'i>) -> span::Span<'i> {
-        if ptr::eq(self.input, other.input)
+    pub fn span(&self, other: &Position) -> span::Span {
+        if Arc::ptr_eq(&self.input, &other.input)
         /* && self.input.get(self.pos..other.pos).is_some() */
         {
             // This is safe because the pos field of a Position should always be a valid str index.
-            unsafe { span::Span::new_unchecked(self.input, self.pos, other.pos) }
+            unsafe { span::Span::new_unchecked(self.input.clone(), self.pos, other.pos) }
         } else {
             // TODO: maybe a panic if self.pos < other.pos
             panic!("span created from positions from different inputs")
@@ -194,7 +197,7 @@ impl<'i> Position<'i> {
     /// assert_eq!(result.unwrap().position().line_of(), "a");
     /// ```
     #[inline]
-    pub fn line_of(&self) -> &'i str {
+    pub fn line_of(&self) -> &str {
         if self.pos > self.input.len() {
             panic!("position out of bounds");
         };
@@ -387,23 +390,23 @@ impl<'i> Position<'i> {
     }
 }
 
-impl<'i> fmt::Debug for Position<'i> {
+impl fmt::Debug for Position {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Position").field("pos", &self.pos).finish()
     }
 }
 
-impl<'i> PartialEq for Position<'i> {
-    fn eq(&self, other: &Position<'i>) -> bool {
-        ptr::eq(self.input, other.input) && self.pos == other.pos
+impl PartialEq for Position {
+    fn eq(&self, other: &Position) -> bool {
+        Arc::ptr_eq(&self.input, &other.input) && self.pos == other.pos
     }
 }
 
-impl<'i> Eq for Position<'i> {}
+impl Eq for Position {}
 
-impl<'i> PartialOrd for Position<'i> {
-    fn partial_cmp(&self, other: &Position<'i>) -> Option<Ordering> {
-        if ptr::eq(self.input, other.input) {
+impl PartialOrd for Position {
+    fn partial_cmp(&self, other: &Position) -> Option<Ordering> {
+        if Arc::ptr_eq(&self.input, &other.input) {
             self.pos.partial_cmp(&other.pos)
         } else {
             None
@@ -411,16 +414,16 @@ impl<'i> PartialOrd for Position<'i> {
     }
 }
 
-impl<'i> Ord for Position<'i> {
-    fn cmp(&self, other: &Position<'i>) -> Ordering {
+impl Ord for Position {
+    fn cmp(&self, other: &Position) -> Ordering {
         self.partial_cmp(other)
             .expect("cannot compare positions from different strs")
     }
 }
 
-impl<'i> Hash for Position<'i> {
+impl Hash for Position {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (self.input as *const str).hash(state);
+        Arc::as_ptr(&self.input).hash(state);
         self.pos.hash(state);
     }
 }

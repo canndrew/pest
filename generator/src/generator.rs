@@ -59,7 +59,7 @@ pub fn generate(
                 rule: Rule,
                 input: &'i str
             ) -> #result<
-                ::pest::iterators::Pairs<'i, Rule>,
+                ::pest::iterators::Pairs<Rule>,
                 ::pest::error::Error<Rule>
             > {
                 mod rules {
@@ -77,7 +77,7 @@ pub fn generate(
                     pub use self::visible::*;
                 }
 
-                ::pest::state(input, |state| {
+                ::pest::state(::std::sync::Arc::from(input), |state| {
                     match rule {
                         #patterns
                     }
@@ -1018,7 +1018,7 @@ mod tests {
                         rule: Rule,
                         input: &'i str
                     ) -> #result<
-                        ::pest::iterators::Pairs<'i, Rule>,
+                        ::pest::iterators::Pairs<Rule>,
                         ::pest::error::Error<Rule>
                     > {
                         mod rules {
@@ -1052,7 +1052,7 @@ mod tests {
                             pub use self::visible::*;
                         }
 
-                        ::pest::state(input, |state| {
+                        ::pest::state(::std::sync::Arc::from(input), |state| {
                             match rule {
                                 Rule::a => rules::a(state)
                             }

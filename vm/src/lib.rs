@@ -18,6 +18,7 @@ use pest_meta::ast::RuleType;
 use pest_meta::optimizer::{OptimizedExpr, OptimizedRule};
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 mod macros;
 
@@ -35,15 +36,15 @@ impl Vm {
         &'a self,
         rule: &'a str,
         input: &'i str,
-    ) -> Result<Pairs<'i, &str>, Error<&str>> {
-        pest::state(input, |state| self.parse_rule(rule, state))
+    ) -> Result<Pairs<&str>, Error<&str>> {
+        pest::state(Arc::from(input), |state| self.parse_rule(rule, state))
     }
 
     fn parse_rule<'a, 'i>(
         &'a self,
         rule: &'a str,
-        state: Box<ParserState<'i, &'a str>>,
-    ) -> ParseResult<Box<ParserState<'i, &'a str>>> {
+        state: Box<ParserState<&'a str>>,
+    ) -> ParseResult<Box<ParserState<&'a str>>> {
         match rule {
             "ANY" => return state.skip(1),
             "EOI" => return state.rule("EOI", |state| state.end_of_input()),
@@ -144,8 +145,8 @@ impl Vm {
     fn parse_expr<'a, 'i>(
         &'a self,
         expr: &'a OptimizedExpr,
-        state: Box<ParserState<'i, &'a str>>,
-    ) -> ParseResult<Box<ParserState<'i, &'a str>>> {
+        state: Box<ParserState<&'a str>>,
+    ) -> ParseResult<Box<ParserState<&'a str>>> {
         match *expr {
             OptimizedExpr::Str(ref string) => state.match_string(string),
             OptimizedExpr::Insens(ref string) => state.match_insensitive(string),
@@ -211,8 +212,8 @@ impl Vm {
 
     fn skip<'a, 'i>(
         &'a self,
-        state: Box<ParserState<'i, &'a str>>,
-    ) -> ParseResult<Box<ParserState<'i, &'a str>>> {
+        state: Box<ParserState<&'a str>>,
+    ) -> ParseResult<Box<ParserState<&'a str>>> {
         match (
             self.rules.contains_key("WHITESPACE"),
             self.rules.contains_key("COMMENT"),

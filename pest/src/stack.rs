@@ -9,7 +9,7 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
-use core::ops::{Index, Range};
+use std::ops::{Index, Range};
 
 /// Implementation of a `Stack` which maintains an log of `StackOp`s in order to rewind the stack
 /// to a previous state.

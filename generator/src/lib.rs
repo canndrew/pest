@@ -92,6 +92,7 @@ pub fn derive_parser(input: TokenStream, include_grammar: bool) -> TokenStream {
     };
 
     let defaults = unwrap_or_report(validator::validate_pairs(pairs.clone()));
+    let defaults = defaults.iter().map(|span| span.as_str()).collect();
     let ast = unwrap_or_report(parser::consume_rules(pairs));
     let optimized = optimizer::optimize(ast);
 
