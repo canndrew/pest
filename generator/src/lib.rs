@@ -56,7 +56,7 @@ pub fn derive_parser(input: TokenStream, include_grammar: bool) -> TokenStream {
         GrammarSource::Inline(content) => (content, None),
     };
 
-    let pairs = match parser::parse(Rule::grammar_rules, &data) {
+    let pairs = match parser::parse(Rule::grammar_rules, data.into()) {
         Ok(pairs) => pairs,
         Err(error) => panic!(
             "error parsing \n{}",

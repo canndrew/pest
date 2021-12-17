@@ -55,9 +55,9 @@ pub fn generate(
     let parser_impl = quote! {
         #[allow(clippy::all)]
         impl #impl_generics ::pest::Parser<Rule> for #name #ty_generics #where_clause {
-            fn parse<'i>(
+            fn parse(
                 rule: Rule,
-                input: &'i str
+                input: ::std::sync::Arc<str>,
             ) -> #result<
                 ::pest::iterators::Pairs<Rule>,
                 ::pest::error::Error<Rule>

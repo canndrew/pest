@@ -9,6 +9,7 @@
 
 use std::char;
 use std::iter::Peekable;
+use std::sync::Arc;
 
 use pest::error::{Error, ErrorVariant};
 use pest::iterators::{Pair, Pairs};
@@ -26,7 +27,7 @@ mod grammar {
 
 pub use self::grammar::*;
 
-pub fn parse(rule: Rule, data: &str) -> Result<Pairs<Rule>, Error<Rule>> {
+pub fn parse(rule: Rule, data: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
     PestParser::parse(rule, data)
 }
 
