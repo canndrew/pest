@@ -34,7 +34,7 @@ pub struct Span {
 impl Span {
     /// Get the original input that this `Span` refers to without being indexed from `start` to
     /// `end`.
-    pub fn input(&self) -> &str {
+    pub fn input(&self) -> &Arc<str> {
         &self.input
     }
     /// Create a new `Span` without checking invariants. (Checked with `debug_assertions`.)
