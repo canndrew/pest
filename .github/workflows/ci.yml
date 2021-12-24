@@ -11,6 +11,8 @@ on:
       - staging
       - trying
       - master
+  release:
+    types: [published]
 
 jobs:
   testing:
@@ -131,39 +133,28 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
-# fuzzing: # fuzzit is now offline
-#   name: Fuzz Testing
-#   runs-on: ubuntu-latest
-#   if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-#   steps:
-#     - name: Checkout source code
-#       uses: actions/checkout@v2
-#     - name: Install Rust Nightly
-#       uses: actions-rs/toolchain@v1
-#       with:
-#         toolchain: nightly
-#         default: true
-#     - name: Install Cargo Fuzz
-#       uses: actions-rs/install@v0.1
-#       with:
-#         crate: cargo-fuzz
-#         version: latest
-#         use-tool-cache: true
-#     - name: Bootstraping Grammars - Building
-#       uses: actions-rs/cargo@v1
-#       with:
-#         command: build
-#         args: --package pest_bootstrap
-#     - name: Bootstraping Grammars - Executing
-#       uses: actions-rs/cargo@v1
-#       with:
-#         command: run
-#         args: --package pest_bootstrap
-#     - name: Fuzz Testing - Regressions
-#       env:
-#         FUZZIT_API_KEY: ${{ secrets.FuzzitApiKey }}
-#       run: ./fuzzit.sh local-regression
-#     - name: Fuzz Testing - Fuzzing
-#       env:
-#         FUZZIT_API_KEY: ${{ secrets.FuzzitApiKey }}
-#       run: ./fuzzit.sh fuzzing
+            
+  publish:
+    # Only do this job if publishing a release
+    needs: build
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Verify tag version
+        run: |
+          cargo install toml-cli
+          ./.github/workflows/scripts/verify_tag.sh ${{ github.ref_name }} Cargo.toml
+      - name: Publish crate
+        uses: katyo/publish-crates@v1
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
