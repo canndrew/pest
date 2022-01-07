@@ -6,5 +6,4 @@ members = [
     "fuel-grammars",
     "fuel-meta",
     "fuel-pest",
-    "vm"
 ]
