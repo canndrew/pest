@@ -10,6 +10,7 @@
 #[macro_use]
 extern crate pest;
 
+use std::sync::Arc;
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::{Assoc, Operator, PrecClimber};
@@ -32,7 +33,7 @@ enum Rule {
 struct CalculatorParser;
 
 impl Parser<Rule> for CalculatorParser {
-    fn parse(rule: Rule, input: &str) -> Result<Pairs<Rule>, Error<Rule>> {
+    fn parse(rule: Rule, input: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
         fn expression(state: Box<ParserState<Rule>>) -> ParseResult<Box<ParserState<Rule>>> {
             state.rule(Rule::expression, |s| {
                 s.sequence(|s| {
@@ -109,7 +110,7 @@ impl Parser<Rule> for CalculatorParser {
     }
 }
 
-fn consume<'i>(pair: Pair<'i, Rule>, climber: &PrecClimber<Rule>) -> i32 {
+fn consume(pair: Pair<Rule>, climber: &PrecClimber<Rule>) -> i32 {
     let primary = |pair| consume(pair, climber);
     let infix = |lhs: i32, op: Pair<Rule>, rhs: i32| match op.as_rule() {
         Rule::plus => lhs + rhs,
@@ -132,7 +133,7 @@ fn consume<'i>(pair: Pair<'i, Rule>, climber: &PrecClimber<Rule>) -> i32 {
 fn number() {
     parses_to! {
         parser: CalculatorParser,
-        input: "-12",
+        input: Arc::from("-12"),
         rule: Rule::expression,
         tokens: [
             expression(0, 3, [
@@ -146,7 +147,7 @@ fn number() {
 fn parens() {
     parses_to! {
         parser: CalculatorParser,
-        input: "((-12))",
+        input: Arc::from("((-12))"),
         rule: Rule::expression,
         tokens: [
             expression(0, 7, [
@@ -164,7 +165,7 @@ fn parens() {
 fn expression() {
     parses_to! {
         parser: CalculatorParser,
-        input: "-12+3*(4-9)^7^2",
+        input: Arc::from("-12+3*(4-9)^7^2"),
         rule: Rule::expression,
         tokens: [
             expression(0, 15, [
@@ -196,6 +197,6 @@ fn prec_climb() {
         Operator::new(Rule::power, Assoc::Right),
     ]);
 
-    let pairs = CalculatorParser::parse(Rule::expression, "-12+3*(4-9)^3^2/9%7381");
+    let pairs = CalculatorParser::parse(Rule::expression, Arc::from("-12+3*(4-9)^3^2/9%7381"));
     assert_eq!(-1_525, consume(pairs.unwrap().next().unwrap(), &climber));
 }

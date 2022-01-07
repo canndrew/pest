@@ -7,6 +7,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use alloc::{format, vec::Vec};
+use std::sync::Arc;
 
 #[macro_use]
 extern crate pest;
@@ -21,7 +22,7 @@ struct GrammarParser;
 fn inline_string() {
     parses_to! {
         parser: GrammarParser,
-        input: "abc",
+        input: Arc::from("abc"),
         rule: Rule::string,
         tokens: [
             string(0, 3)

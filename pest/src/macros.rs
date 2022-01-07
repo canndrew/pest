@@ -147,6 +147,7 @@ macro_rules! consumes_to {
 /// # use pest::Parser;
 /// # use pest::error::Error;
 /// # use pest::iterators::Pairs;
+/// # use std::sync::Arc;
 /// # fn main() {
 /// # #[allow(non_camel_case_types)]
 /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -159,7 +160,7 @@ macro_rules! consumes_to {
 /// # struct AbcParser;
 /// #
 /// # impl Parser<Rule> for AbcParser {
-/// #     fn parse<'i>(_: Rule, input: &'i str) -> Result<Pairs<'i, Rule>, Error<Rule>> {
+/// #     fn parse(_: Rule, input: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
 /// #         pest::state(input, |state| {
 /// #             state.rule(Rule::a, |state| {
 /// #                 state.skip(1).unwrap().rule(Rule::b, |state| {
@@ -175,7 +176,7 @@ macro_rules! consumes_to {
 /// # }
 /// parses_to! {
 ///     parser: AbcParser,
-///     input:  "abcde",
+///     input:  Arc::from("abcde"),
 ///     rule:   Rule::a,
 ///     tokens: [
 ///         a(0, 3, [
@@ -248,6 +249,7 @@ macro_rules! parses_to {
 /// # use pest::Parser;
 /// # use pest::error::Error;
 /// # use pest::iterators::Pairs;
+/// # use std::sync::Arc;
 /// # fn main() {
 /// # #[allow(non_camel_case_types)]
 /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -260,7 +262,7 @@ macro_rules! parses_to {
 /// # struct AbcParser;
 /// #
 /// # impl Parser<Rule> for AbcParser {
-/// #     fn parse<'i>(_: Rule, input: &'i str) -> Result<Pairs<'i, Rule>, Error<Rule>> {
+/// #     fn parse(_: Rule, input: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
 /// #         pest::state(input, |state| {
 /// #             state.rule(Rule::a, |state| {
 /// #                 state.skip(1).unwrap().rule(Rule::b, |s| {
@@ -276,7 +278,7 @@ macro_rules! parses_to {
 /// # }
 /// fails_with! {
 ///     parser: AbcParser,
-///     input: "abcdf",
+///     input: Arc::from("abcdf"),
 ///     rule: Rule::a,
 ///     positives: vec![Rule::c],
 ///     negatives: vec![],
@@ -318,6 +320,7 @@ pub mod tests {
     use super::super::error::Error;
     use super::super::iterators::Pairs;
     use super::super::{state, Parser};
+    use std::sync::Arc;
     use alloc::format;
     use alloc::vec;
     use alloc::vec::Vec;
@@ -333,7 +336,7 @@ pub mod tests {
     pub struct AbcParser;
 
     impl Parser<Rule> for AbcParser {
-        fn parse<'i>(_: Rule, input: &'i str) -> Result<Pairs<'i, Rule>, Error<Rule>> {
+        fn parse(_: Rule, input: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
             state(input, |state| {
                 state
                     .rule(Rule::a, |s| {
@@ -352,7 +355,7 @@ pub mod tests {
     fn parses_to() {
         parses_to! {
             parser: AbcParser,
-            input: "abcde",
+            input: Arc::from("abcde"),
             rule: Rule::a,
             tokens: [
                 a(0, 3, [
@@ -368,7 +371,7 @@ pub mod tests {
     fn missing_end() {
         parses_to! {
             parser: AbcParser,
-            input: "abcde",
+            input: Arc::from("abcde"),
             rule: Rule::a,
             tokens: [
                 a(0, 3, [
@@ -383,7 +386,7 @@ pub mod tests {
     fn empty() {
         parses_to! {
             parser: AbcParser,
-            input: "abcde",
+            input: Arc::from("abcde"),
             rule: Rule::a,
             tokens: []
         };
@@ -393,7 +396,7 @@ pub mod tests {
     fn fails_with() {
         fails_with! {
             parser: AbcParser,
-            input: "abcdf",
+            input: Arc::from("abcdf"),
             rule: Rule::a,
             positives: vec![Rule::c],
             negatives: vec![],
@@ -406,7 +409,7 @@ pub mod tests {
     fn wrong_positives() {
         fails_with! {
             parser: AbcParser,
-            input: "abcdf",
+            input: Arc::from("abcdf"),
             rule: Rule::a,
             positives: vec![Rule::a],
             negatives: vec![],
@@ -419,7 +422,7 @@ pub mod tests {
     fn wrong_negatives() {
         fails_with! {
             parser: AbcParser,
-            input: "abcdf",
+            input: Arc::from("abcdf"),
             rule: Rule::a,
             positives: vec![Rule::c],
             negatives: vec![Rule::c],
@@ -432,7 +435,7 @@ pub mod tests {
     fn wrong_pos() {
         fails_with! {
             parser: AbcParser,
-            input: "abcdf",
+            input: Arc::from("abcdf"),
             rule: Rule::a,
             positives: vec![Rule::c],
             negatives: vec![],

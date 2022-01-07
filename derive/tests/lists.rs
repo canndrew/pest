@@ -10,6 +10,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use alloc::{format, vec::Vec};
+use std::sync::Arc;
 
 #[macro_use]
 extern crate pest;
@@ -24,7 +25,7 @@ struct ListsParser;
 fn item() {
     parses_to! {
         parser: ListsParser,
-        input: "- a",
+        input: Arc::from("- a"),
         rule: Rule::lists,
         tokens: [
             item(2, 3)
@@ -36,7 +37,7 @@ fn item() {
 fn items() {
     parses_to! {
         parser: ListsParser,
-        input: "- a\n- b",
+        input: Arc::from("- a\n- b"),
         rule: Rule::lists,
         tokens: [
             item(2, 3),
@@ -49,7 +50,7 @@ fn items() {
 fn children() {
     parses_to! {
         parser: ListsParser,
-        input: "  - b",
+        input: Arc::from("  - b"),
         rule: Rule::children,
         tokens: [
             children(0, 5, [
@@ -63,7 +64,7 @@ fn children() {
 fn nested_item() {
     parses_to! {
         parser: ListsParser,
-        input: "- a\n  - b",
+        input: Arc::from("- a\n  - b"),
         rule: Rule::lists,
         tokens: [
             item(2, 3),
@@ -78,7 +79,7 @@ fn nested_item() {
 fn nested_items() {
     parses_to! {
         parser: ListsParser,
-        input: "- a\n  - b\n  - c",
+        input: Arc::from("- a\n  - b\n  - c"),
         rule: Rule::lists,
         tokens: [
             item(2, 3),
@@ -94,7 +95,7 @@ fn nested_items() {
 fn nested_two_levels() {
     parses_to! {
         parser: ListsParser,
-        input: "- a\n  - b\n    - c",
+        input: Arc::from("- a\n  - b\n    - c"),
         rule: Rule::lists,
         tokens: [
             item(2, 3),
@@ -112,7 +113,7 @@ fn nested_two_levels() {
 fn nested_then_not() {
     parses_to! {
         parser: ListsParser,
-        input: "- a\n  - b\n- c",
+        input: Arc::from("- a\n  - b\n- c"),
         rule: Rule::lists,
         tokens: [
             item(2, 3),

@@ -44,9 +44,10 @@ impl Position {
     /// # Examples
     /// ```
     /// # use pest::Position;
+    /// # use std::sync::Arc;
     /// let cheart = '💖';
-    /// let heart = "💖";
-    /// assert_eq!(Position::new(heart, 1), None);
+    /// let heart: Arc<str> = Arc::from("💖");
+    /// assert_eq!(Position::new(heart.clone(), 1), None);
     /// assert_ne!(Position::new(heart, cheart.len_utf8()), None);
     /// ```
     #[allow(clippy::new_ret_no_self)]
@@ -63,7 +64,8 @@ impl Position {
     ///
     /// ```
     /// # use pest::Position;
-    /// let start = Position::from_start("");
+    /// # use std::sync::Arc;
+    /// let start = Position::from_start(Arc::from(""));
     /// assert_eq!(start.pos(), 0);
     /// ```
     #[inline]
@@ -78,7 +80,8 @@ impl Position {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut start = Position::from_start(input);
     ///
     /// assert_eq!(start.pos(), 0);
@@ -98,7 +101,8 @@ impl Position {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let span = start.span(&start.clone());
     ///
@@ -124,11 +128,12 @@ impl Position {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "\na";
+    /// let input: Arc<str> = Arc::from("\na");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.match_string("\na");
     /// assert!(result.is_ok());
@@ -186,11 +191,12 @@ impl Position {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "\na";
+    /// let input: Arc<str> = Arc::from("\na");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.match_string("\na");
     /// assert!(result.is_ok());
@@ -434,74 +440,74 @@ mod tests {
 
     #[test]
     fn empty() {
-        let input = "";
-        assert_eq!(Position::new(input, 0).unwrap().match_string(""), true);
-        assert_eq!(!Position::new(input, 0).unwrap().match_string("a"), true);
+        let input: Arc<str> = Arc::from("");
+        assert_eq!(Position::new(input.clone(), 0).unwrap().match_string(""), true);
+        assert_eq!(!Position::new(input.clone(), 0).unwrap().match_string("a"), true);
     }
 
     #[test]
     fn parts() {
-        let input = "asdasdf";
+        let input: Arc<str> = Arc::from("asdasdf");
 
-        assert_eq!(Position::new(input, 0).unwrap().match_string("asd"), true);
-        assert_eq!(Position::new(input, 3).unwrap().match_string("asdf"), true);
+        assert_eq!(Position::new(input.clone(), 0).unwrap().match_string("asd"), true);
+        assert_eq!(Position::new(input.clone(), 3).unwrap().match_string("asdf"), true);
     }
 
     #[test]
     fn line_col() {
-        let input = "a\rb\nc\r\nd嗨";
+        let input: Arc<str> = Arc::from("a\rb\nc\r\nd嗨");
 
-        assert_eq!(Position::new(input, 0).unwrap().line_col(), (1, 1));
-        assert_eq!(Position::new(input, 1).unwrap().line_col(), (1, 2));
-        assert_eq!(Position::new(input, 2).unwrap().line_col(), (1, 3));
-        assert_eq!(Position::new(input, 3).unwrap().line_col(), (1, 4));
-        assert_eq!(Position::new(input, 4).unwrap().line_col(), (2, 1));
-        assert_eq!(Position::new(input, 5).unwrap().line_col(), (2, 2));
-        assert_eq!(Position::new(input, 6).unwrap().line_col(), (2, 3));
-        assert_eq!(Position::new(input, 7).unwrap().line_col(), (3, 1));
-        assert_eq!(Position::new(input, 8).unwrap().line_col(), (3, 2));
-        assert_eq!(Position::new(input, 11).unwrap().line_col(), (3, 3));
+        assert_eq!(Position::new(input.clone(), 0).unwrap().line_col(), (1, 1));
+        assert_eq!(Position::new(input.clone(), 1).unwrap().line_col(), (1, 2));
+        assert_eq!(Position::new(input.clone(), 2).unwrap().line_col(), (1, 3));
+        assert_eq!(Position::new(input.clone(), 3).unwrap().line_col(), (1, 4));
+        assert_eq!(Position::new(input.clone(), 4).unwrap().line_col(), (2, 1));
+        assert_eq!(Position::new(input.clone(), 5).unwrap().line_col(), (2, 2));
+        assert_eq!(Position::new(input.clone(), 6).unwrap().line_col(), (2, 3));
+        assert_eq!(Position::new(input.clone(), 7).unwrap().line_col(), (3, 1));
+        assert_eq!(Position::new(input.clone(), 8).unwrap().line_col(), (3, 2));
+        assert_eq!(Position::new(input.clone(), 11).unwrap().line_col(), (3, 3));
     }
 
     #[test]
     fn line_of() {
-        let input = "a\rb\nc\r\nd嗨";
+        let input: Arc<str> = Arc::from("a\rb\nc\r\nd嗨");
 
-        assert_eq!(Position::new(input, 0).unwrap().line_of(), "a\rb\n");
-        assert_eq!(Position::new(input, 1).unwrap().line_of(), "a\rb\n");
-        assert_eq!(Position::new(input, 2).unwrap().line_of(), "a\rb\n");
-        assert_eq!(Position::new(input, 3).unwrap().line_of(), "a\rb\n");
-        assert_eq!(Position::new(input, 4).unwrap().line_of(), "c\r\n");
-        assert_eq!(Position::new(input, 5).unwrap().line_of(), "c\r\n");
-        assert_eq!(Position::new(input, 6).unwrap().line_of(), "c\r\n");
-        assert_eq!(Position::new(input, 7).unwrap().line_of(), "d嗨");
-        assert_eq!(Position::new(input, 8).unwrap().line_of(), "d嗨");
-        assert_eq!(Position::new(input, 11).unwrap().line_of(), "d嗨");
+        assert_eq!(Position::new(input.clone(), 0).unwrap().line_of(), "a\rb\n");
+        assert_eq!(Position::new(input.clone(), 1).unwrap().line_of(), "a\rb\n");
+        assert_eq!(Position::new(input.clone(), 2).unwrap().line_of(), "a\rb\n");
+        assert_eq!(Position::new(input.clone(), 3).unwrap().line_of(), "a\rb\n");
+        assert_eq!(Position::new(input.clone(), 4).unwrap().line_of(), "c\r\n");
+        assert_eq!(Position::new(input.clone(), 5).unwrap().line_of(), "c\r\n");
+        assert_eq!(Position::new(input.clone(), 6).unwrap().line_of(), "c\r\n");
+        assert_eq!(Position::new(input.clone(), 7).unwrap().line_of(), "d嗨");
+        assert_eq!(Position::new(input.clone(), 8).unwrap().line_of(), "d嗨");
+        assert_eq!(Position::new(input.clone(), 11).unwrap().line_of(), "d嗨");
     }
 
     #[test]
     fn line_of_empty() {
-        let input = "";
+        let input: Arc<str> = Arc::from("");
 
         assert_eq!(Position::new(input, 0).unwrap().line_of(), "");
     }
 
     #[test]
     fn line_of_new_line() {
-        let input = "\n";
+        let input: Arc<str> = Arc::from("\n");
 
         assert_eq!(Position::new(input, 0).unwrap().line_of(), "\n");
     }
 
     #[test]
     fn line_of_between_new_line() {
-        let input = "\n\n";
+        let input: Arc<str> = Arc::from("\n\n");
 
         assert_eq!(Position::new(input, 1).unwrap().line_of(), "\n");
     }
 
-    fn measure_skip(input: &str, pos: usize, n: usize) -> Option<usize> {
-        let mut p = Position::new(input, pos).unwrap();
+    fn measure_skip(input: &Arc<str>, pos: usize, n: usize) -> Option<usize> {
+        let mut p = Position::new(input.clone(), pos).unwrap();
         if p.skip(n) {
             Some(p.pos - pos)
         } else {
@@ -511,24 +517,24 @@ mod tests {
 
     #[test]
     fn skip_empty() {
-        let input = "";
+        let input: Arc<str> = Arc::from("");
 
-        assert_eq!(measure_skip(input, 0, 0), Some(0));
-        assert_eq!(measure_skip(input, 0, 1), None);
+        assert_eq!(measure_skip(&input, 0, 0), Some(0));
+        assert_eq!(measure_skip(&input, 0, 1), None);
     }
 
     #[test]
     fn skip() {
-        let input = "d嗨";
+        let input: Arc<str> = Arc::from("d嗨");
 
-        assert_eq!(measure_skip(input, 0, 0), Some(0));
-        assert_eq!(measure_skip(input, 0, 1), Some(1));
-        assert_eq!(measure_skip(input, 1, 1), Some(3));
+        assert_eq!(measure_skip(&input, 0, 0), Some(0));
+        assert_eq!(measure_skip(&input, 0, 1), Some(1));
+        assert_eq!(measure_skip(&input, 1, 1), Some(3));
     }
 
     #[test]
     fn skip_until() {
-        let input = "ab ac";
+        let input: Arc<str> = Arc::from("ab ac");
         let pos = Position::from_start(input);
 
         let mut test_pos = pos.clone();
@@ -554,41 +560,41 @@ mod tests {
 
     #[test]
     fn match_range() {
-        let input = "b";
+        let input: Arc<str> = Arc::from("b");
 
-        assert_eq!(Position::new(input, 0).unwrap().match_range('a'..'c'), true);
-        assert_eq!(Position::new(input, 0).unwrap().match_range('b'..'b'), true);
+        assert_eq!(Position::new(input.clone(), 0).unwrap().match_range('a'..'c'), true);
+        assert_eq!(Position::new(input.clone(), 0).unwrap().match_range('b'..'b'), true);
         assert_eq!(
-            !Position::new(input, 0).unwrap().match_range('a'..'a'),
+            !Position::new(input.clone(), 0).unwrap().match_range('a'..'a'),
             true
         );
         assert_eq!(
-            !Position::new(input, 0).unwrap().match_range('c'..'c'),
+            !Position::new(input.clone(), 0).unwrap().match_range('c'..'c'),
             true
         );
         assert_eq!(
-            Position::new(input, 0).unwrap().match_range('a'..'嗨'),
+            Position::new(input.clone(), 0).unwrap().match_range('a'..'嗨'),
             true
         );
     }
 
     #[test]
     fn match_insensitive() {
-        let input = "AsdASdF";
+        let input: Arc<str> = Arc::from("AsdASdF");
 
         assert_eq!(
-            Position::new(input, 0).unwrap().match_insensitive("asd"),
+            Position::new(input.clone(), 0).unwrap().match_insensitive("asd"),
             true
         );
         assert_eq!(
-            Position::new(input, 3).unwrap().match_insensitive("asdf"),
+            Position::new(input.clone(), 3).unwrap().match_insensitive("asdf"),
             true
         );
     }
 
     #[test]
     fn cmp() {
-        let input = "a";
+        let input: Arc<str> = Arc::from("a");
         let start = Position::from_start(input);
         let mut end = start.clone();
 
@@ -601,8 +607,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn cmp_panic() {
-        let input1 = "a";
-        let input2 = "b";
+        let input1 = Arc::from("a");
+        let input2 = Arc::from("b");
         let pos1 = Position::from_start(input1);
         let pos2 = Position::from_start(input2);
 
@@ -614,7 +620,7 @@ mod tests {
     fn hash() {
         use std::collections::HashSet;
 
-        let input = "a";
+        let input: Arc<str> = Arc::from("a");
         let start = Position::from_start(input);
         let mut positions = HashSet::new();
 

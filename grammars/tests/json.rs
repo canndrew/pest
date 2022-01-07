@@ -13,6 +13,7 @@ extern crate pest_grammars;
 
 use std::fs::File;
 use std::io::Read;
+use std::sync::Arc;
 
 use pest::Parser;
 
@@ -22,7 +23,7 @@ use pest_grammars::json::*;
 fn null() {
     parses_to! {
         parser: JsonParser,
-        input: "null",
+        input: Arc::from("null"),
         rule: Rule::null,
         tokens: [
             null(0, 4)
@@ -34,7 +35,7 @@ fn null() {
 fn bool() {
     parses_to! {
         parser: JsonParser,
-        input: "false",
+        input: Arc::from("false"),
         rule: Rule::bool,
         tokens: [
             bool(0, 5)
@@ -46,7 +47,7 @@ fn bool() {
 fn number_zero() {
     parses_to! {
         parser: JsonParser,
-        input: "0",
+        input: Arc::from("0"),
         rule: Rule::number,
         tokens: [
             number(0, 1)
@@ -58,7 +59,7 @@ fn number_zero() {
 fn float() {
     parses_to! {
         parser: JsonParser,
-        input: "100.001",
+        input: Arc::from("100.001"),
         rule: Rule::number,
         tokens: [
             number(0, 7)
@@ -70,7 +71,7 @@ fn float() {
 fn float_with_exp() {
     parses_to! {
         parser: JsonParser,
-        input: "100.001E+100",
+        input: Arc::from("100.001E+100"),
         rule: Rule::number,
         tokens: [
             number(0, 12)
@@ -82,7 +83,7 @@ fn float_with_exp() {
 fn number_minus_zero() {
     parses_to! {
         parser: JsonParser,
-        input: "-0",
+        input: Arc::from("-0"),
         rule: Rule::number,
         tokens: [
             number(0, 2)
@@ -94,7 +95,7 @@ fn number_minus_zero() {
 fn string_with_escapes() {
     parses_to! {
         parser: JsonParser,
-        input: "\"asd\\u0000\\\"\"",
+        input: Arc::from("\"asd\\u0000\\\"\""),
         rule: Rule::string,
         tokens: [
             string(0, 13)
@@ -106,7 +107,7 @@ fn string_with_escapes() {
 fn array_empty() {
     parses_to! {
         parser: JsonParser,
-        input: "[ ]",
+        input: Arc::from("[ ]"),
         rule: Rule::array,
         tokens: [
             array(0, 3)
@@ -118,7 +119,7 @@ fn array_empty() {
 fn array() {
     parses_to! {
         parser: JsonParser,
-        input: "[0.0e1, false, null, \"a\", [0]]",
+        input: Arc::from("[0.0e1, false, null, \"a\", [0]]"),
         rule: Rule::array,
         tokens: [
             array(0, 30, [
@@ -140,7 +141,7 @@ fn array() {
 fn object() {
     parses_to! {
         parser: JsonParser,
-        input: "{\"a\" : 3, \"b\" : [{}, 3]}",
+        input: Arc::from("{\"a\" : 3, \"b\" : [{}, 3]}"),
         rule: Rule::object,
         tokens: [
             object(0, 24, [
@@ -169,5 +170,5 @@ fn examples() {
 
     file.read_to_string(&mut data).unwrap();
 
-    JsonParser::parse(Rule::json, &data).unwrap();
+    JsonParser::parse(Rule::json, Arc::from(data)).unwrap();
 }

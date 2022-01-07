@@ -54,9 +54,10 @@ impl Span {
     ///
     /// ```
     /// # use pest::Span;
-    /// let input = "Hello!";
-    /// assert_eq!(None, Span::new(input, 100, 0));
-    /// assert!(Span::new(input, 0, input.len()).is_some());
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("Hello!");
+    /// assert_eq!(None, Span::new(input.clone(), 100, 0));
+    /// assert!(Span::new(input.clone(), 0, input.len()).is_some());
     /// ```
     #[allow(clippy::new_ret_no_self)]
     pub fn new(input: Arc<str>, start: usize, end: usize) -> Option<Span> {
@@ -73,7 +74,8 @@ impl Span {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let end = start.clone();
     /// let span = start.span(&end);
@@ -91,7 +93,8 @@ impl Span {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let end = start.clone();
     /// let span = start.span(&end);
@@ -109,7 +112,8 @@ impl Span {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let end = start.clone();
     /// let span = start.clone().span(&end);
@@ -128,7 +132,8 @@ impl Span {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let end = start.clone();
     /// let span = start.span(&end);
@@ -147,7 +152,8 @@ impl Span {
     ///
     /// ```
     /// # use pest::Position;
-    /// let input = "ab";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("ab");
     /// let start = Position::from_start(input);
     /// let end = start.clone();
     /// let span = start.clone().span(&end);
@@ -169,11 +175,12 @@ impl Span {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "abc";
+    /// let input: Arc<str> = Arc::from("abc");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input).skip(1).unwrap();
     /// let start_pos = state.position().clone();
     /// state = state.match_string("b").unwrap();
@@ -192,11 +199,12 @@ impl Span {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "a\nb\nc";
+    /// let input: Arc<str> = Arc::from("a\nb\nc");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input).skip(2).unwrap();
     /// let start_pos = state.position().clone();
     /// state = state.match_string("b\nc").unwrap();
@@ -274,7 +282,7 @@ mod tests {
 
     #[test]
     fn split() {
-        let input = "a";
+        let input = Arc::from("a");
         let start = position::Position::from_start(input);
         let mut end = start.clone();
 
@@ -287,7 +295,7 @@ mod tests {
 
     #[test]
     fn lines_mid() {
-        let input = "abc\ndef\nghi";
+        let input = Arc::from("abc\ndef\nghi");
         let span = Span::new(input, 1, 7).unwrap();
         let lines: Vec<_> = span.lines().collect();
         //println!("{:?}", lines);
@@ -298,7 +306,7 @@ mod tests {
 
     #[test]
     fn lines_eof() {
-        let input = "abc\ndef\nghi";
+        let input = Arc::from("abc\ndef\nghi");
         let span = Span::new(input, 5, 11).unwrap();
         assert!(span.end_pos().at_end());
         let lines: Vec<_> = span.lines().collect();

@@ -1014,9 +1014,9 @@ mod tests {
 
                 #[allow(clippy::all)]
                 impl ::pest::Parser<Rule> for MyParser {
-                    fn parse<'i>(
+                    fn parse(
                         rule: Rule,
-                        input: &'i str
+                        input: ::std::sync::Arc<str>,
                     ) -> #result<
                         ::pest::iterators::Pairs<Rule>,
                         ::pest::error::Error<Rule>

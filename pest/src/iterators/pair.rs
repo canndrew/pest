@@ -68,13 +68,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -97,13 +98,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -127,13 +129,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -154,13 +157,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -184,13 +188,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -212,13 +217,14 @@ impl<R: RuleType> Pair<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -349,11 +355,12 @@ impl<R: RuleType> ::serde::Serialize for Pair<R> {
 mod tests {
     use macros::tests::*;
     use parser::Parser;
+    use std::sync::Arc;
 
     #[test]
     #[cfg(feature = "pretty-print")]
     fn test_pretty_print() {
-        let pair = AbcParser::parse(Rule::a, "abcde").unwrap().next().unwrap();
+        let pair = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap().next().unwrap();
 
         let expected = r#"{
   "pos": [
@@ -384,7 +391,7 @@ mod tests {
 
     #[test]
     fn pair_into_inner() {
-        let pair = AbcParser::parse(Rule::a, "abcde").unwrap().next().unwrap(); // the tokens a(b())
+        let pair = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap().next().unwrap(); // the tokens a(b())
 
         let pairs = pair.into_inner(); // the tokens b()
 

@@ -56,13 +56,14 @@ impl<R: RuleType> FlatPairs<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -153,12 +154,13 @@ impl<R: Clone> Clone for FlatPairs<R> {
 mod tests {
     use super::super::super::macros::tests::*;
     use super::super::super::Parser;
+    use std::sync::Arc;
     use alloc::vec;
     use alloc::vec::Vec;
 
     #[test]
     fn iter_for_flat_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(
             pairs.flatten().map(|p| p.as_rule()).collect::<Vec<Rule>>(),
@@ -168,7 +170,7 @@ mod tests {
 
     #[test]
     fn double_ended_iter_for_flat_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
         assert_eq!(
             pairs
                 .flatten()

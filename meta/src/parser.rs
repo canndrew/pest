@@ -625,7 +625,7 @@ mod tests {
     fn rules() {
         parses_to! {
             parser: PestParser,
-            input: "a = { b } c = { d }",
+            input: Arc::from("a = { b } c = { d }"),
             rule: Rule::grammar_rules,
             tokens: [
                 grammar_rule(0, 9, [
@@ -658,7 +658,7 @@ mod tests {
     fn rule() {
         parses_to! {
             parser: PestParser,
-            input: "a = ! { b ~ c }",
+            input: Arc::from("a = ! { b ~ c }"),
             rule: Rule::grammar_rule,
             tokens: [
                 grammar_rule(0, 15, [
@@ -685,7 +685,7 @@ mod tests {
     fn expression() {
         parses_to! {
             parser: PestParser,
-            input: "_a | 'a'..'b' ~ !^\"abc\" ~ (d | e)*?",
+            input: Arc::from("_a | 'a'..'b' ~ !^\"abc\" ~ (d | e)*?"),
             rule: Rule::expression,
             tokens: [
                 expression(0, 35, [
@@ -744,7 +744,7 @@ mod tests {
     fn repeat_exact() {
         parses_to! {
             parser: PestParser,
-            input: "{1}",
+            input: Arc::from("{1}"),
             rule: Rule::repeat_exact,
             tokens: [
                 repeat_exact(0, 3, [
@@ -760,7 +760,7 @@ mod tests {
     fn repeat_min() {
         parses_to! {
             parser: PestParser,
-            input: "{2,}",
+            input: Arc::from("{2,}"),
             rule: Rule::repeat_min,
             tokens: [
                 repeat_min(0, 4, [
@@ -777,7 +777,7 @@ mod tests {
     fn repeat_max() {
         parses_to! {
             parser: PestParser,
-            input: "{, 3}",
+            input: Arc::from("{, 3}"),
             rule: Rule::repeat_max,
             tokens: [
                 repeat_max(0, 5, [
@@ -794,7 +794,7 @@ mod tests {
     fn repeat_min_max() {
         parses_to! {
             parser: PestParser,
-            input: "{1, 2}",
+            input: Arc::from("{1, 2}"),
             rule: Rule::repeat_min_max,
             tokens: [
                 repeat_min_max(0, 6, [
@@ -812,7 +812,7 @@ mod tests {
     fn push() {
         parses_to! {
             parser: PestParser,
-            input: "PUSH ( a )",
+            input: Arc::from("PUSH ( a )"),
             rule: Rule::_push,
             tokens: [
                 _push(0, 10, [
@@ -832,7 +832,7 @@ mod tests {
     fn peek_slice_all() {
         parses_to! {
             parser: PestParser,
-            input: "PEEK[..]",
+            input: Arc::from("PEEK[..]"),
             rule: Rule::peek_slice,
             tokens: [
                 peek_slice(0, 8, [
@@ -848,7 +848,7 @@ mod tests {
     fn peek_slice_start() {
         parses_to! {
             parser: PestParser,
-            input: "PEEK[1..]",
+            input: Arc::from("PEEK[1..]"),
             rule: Rule::peek_slice,
             tokens: [
                 peek_slice(0, 9, [
@@ -865,7 +865,7 @@ mod tests {
     fn peek_slice_end() {
         parses_to! {
             parser: PestParser,
-            input: "PEEK[ ..-1]",
+            input: Arc::from("PEEK[ ..-1]"),
             rule: Rule::peek_slice,
             tokens: [
                 peek_slice(0, 11, [
@@ -882,7 +882,7 @@ mod tests {
     fn peek_slice_start_end() {
         parses_to! {
             parser: PestParser,
-            input: "PEEK[-5..10]",
+            input: Arc::from("PEEK[-5..10]"),
             rule: Rule::peek_slice,
             tokens: [
                 peek_slice(0, 12, [
@@ -900,7 +900,7 @@ mod tests {
     fn identifier() {
         parses_to! {
             parser: PestParser,
-            input: "_a8943",
+            input: Arc::from("_a8943"),
             rule: Rule::identifier,
             tokens: [
                 identifier(0, 6)
@@ -912,7 +912,7 @@ mod tests {
     fn string() {
         parses_to! {
             parser: PestParser,
-            input: "\"aaaaa\\n\\r\\t\\\\\\0\\'\\\"\\x0F\\u{123abC}\\u{12}aaaaa\"",
+            input: Arc::from("\"aaaaa\\n\\r\\t\\\\\\0\\'\\\"\\x0F\\u{123abC}\\u{12}aaaaa\""),
             rule: Rule::string,
             tokens: [
                 string(0, 46, [
@@ -928,7 +928,7 @@ mod tests {
     fn insensitive_string() {
         parses_to! {
             parser: PestParser,
-            input: "^  \"\\\"hi\"",
+            input: Arc::from("^  \"\\\"hi\""),
             rule: Rule::insensitive_string,
             tokens: [
                 insensitive_string(0, 9, [
@@ -946,7 +946,7 @@ mod tests {
     fn range() {
         parses_to! {
             parser: PestParser,
-            input: "'\\n' .. '\\x1a'",
+            input: Arc::from("'\\n' .. '\\x1a'"),
             rule: Rule::range,
             tokens: [
                 range(0, 14, [
@@ -970,7 +970,7 @@ mod tests {
     fn character() {
         parses_to! {
             parser: PestParser,
-            input: "'\\u{123abC}'",
+            input: Arc::from("'\\u{123abC}'"),
             rule: Rule::character,
             tokens: [
                 character(0, 12, [
@@ -986,7 +986,7 @@ mod tests {
     fn number() {
         parses_to! {
             parser: PestParser,
-            input: "0123",
+            input: Arc::from("0123"),
             rule: Rule::number,
             tokens: [
                 number(0, 4)
@@ -998,7 +998,7 @@ mod tests {
     fn comment() {
         parses_to! {
             parser: PestParser,
-            input: "a ~    // asda\n b",
+            input: Arc::from("a ~    // asda\n b"),
             rule: Rule::expression,
             tokens: [
                 expression(0, 17, [
@@ -1018,7 +1018,7 @@ mod tests {
     fn wrong_identifier() {
         fails_with! {
             parser: PestParser,
-            input: "0",
+            input: Arc::from("0"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::identifier],
             negatives: vec![],
@@ -1030,7 +1030,7 @@ mod tests {
     fn missing_assignment_operator() {
         fails_with! {
             parser: PestParser,
-            input: "a {}",
+            input: Arc::from("a {}"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::assignment_operator],
             negatives: vec![],
@@ -1042,7 +1042,7 @@ mod tests {
     fn wrong_modifier() {
         fails_with! {
             parser: PestParser,
-            input: "a = *{}",
+            input: Arc::from("a = *{}"),
             rule: Rule::grammar_rules,
             positives: vec![
                 Rule::opening_brace,
@@ -1060,7 +1060,7 @@ mod tests {
     fn missing_opening_brace() {
         fails_with! {
             parser: PestParser,
-            input: "a = _",
+            input: Arc::from("a = _"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::opening_brace],
             negatives: vec![],
@@ -1072,7 +1072,7 @@ mod tests {
     fn empty_rule() {
         fails_with! {
             parser: PestParser,
-            input: "a = {}",
+            input: Arc::from("a = {}"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::term],
             negatives: vec![],
@@ -1084,7 +1084,7 @@ mod tests {
     fn missing_rhs() {
         fails_with! {
             parser: PestParser,
-            input: "a = { b ~ }",
+            input: Arc::from("a = { b ~ }"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::term],
             negatives: vec![],
@@ -1096,7 +1096,7 @@ mod tests {
     fn wrong_op() {
         fails_with! {
             parser: PestParser,
-            input: "a = { b % }",
+            input: Arc::from("a = { b % }"),
             rule: Rule::grammar_rules,
             positives: vec![
                 Rule::opening_brace,
@@ -1116,7 +1116,7 @@ mod tests {
     fn missing_closing_paren() {
         fails_with! {
             parser: PestParser,
-            input: "a = { (b }",
+            input: Arc::from("a = { (b }"),
             rule: Rule::grammar_rules,
             positives: vec![
                 Rule::opening_brace,
@@ -1136,7 +1136,7 @@ mod tests {
     fn missing_term() {
         fails_with! {
             parser: PestParser,
-            input: "a = { ! }",
+            input: Arc::from("a = { ! }"),
             rule: Rule::grammar_rules,
             positives: vec![
                 Rule::opening_paren,
@@ -1158,7 +1158,7 @@ mod tests {
     fn string_missing_ending_quote() {
         fails_with! {
             parser: PestParser,
-            input: "a = { \" }",
+            input: Arc::from("a = { \" }"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::quote],
             negatives: vec![],
@@ -1170,7 +1170,7 @@ mod tests {
     fn insensitive_missing_string() {
         fails_with! {
             parser: PestParser,
-            input: "a = { ^ }",
+            input: Arc::from("a = { ^ }"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::quote],
             negatives: vec![],
@@ -1182,7 +1182,7 @@ mod tests {
     fn char_missing_ending_single_quote() {
         fails_with! {
             parser: PestParser,
-            input: "a = { \' }",
+            input: Arc::from("a = { \' }"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::single_quote],
             negatives: vec![],
@@ -1194,7 +1194,7 @@ mod tests {
     fn range_missing_range_operator() {
         fails_with! {
             parser: PestParser,
-            input: "a = { \'a\' }",
+            input: Arc::from("a = { \'a\' }"),
             rule: Rule::grammar_rules,
             positives: vec![Rule::range_operator],
             negatives: vec![],
@@ -1206,7 +1206,7 @@ mod tests {
     fn wrong_postfix() {
         fails_with! {
             parser: PestParser,
-            input: "a = { a& }",
+            input: Arc::from("a = { a& }"),
             rule: Rule::grammar_rules,
             positives: vec![
                 Rule::opening_brace,
@@ -1225,7 +1225,7 @@ mod tests {
     #[test]
     fn ast() {
         let input =
-            "rule = _{ a{1} ~ \"a\"{3,} ~ b{, 2} ~ \"b\"{1, 2} | !(^\"c\" | PUSH('d'..'e'))?* }";
+            Arc::from("rule = _{ a{1} ~ \"a\"{3,} ~ b{, 2} ~ \"b\"{1, 2} | !(^\"c\" | PUSH('d'..'e'))?* }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         let ast = consume_rules_with_spans(pairs).unwrap();
@@ -1263,7 +1263,7 @@ mod tests {
 
     #[test]
     fn ast_peek_slice() {
-        let input = "rule = _{ PEEK[-04..] ~ PEEK[..3] }";
+        let input: Arc<str> = Arc::from("rule = _{ PEEK[-04..] ~ PEEK[..3] }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         let ast = consume_rules_with_spans(pairs).unwrap();
@@ -1292,7 +1292,7 @@ mod tests {
   |
   = number cannot overflow u32")]
     fn repeat_exact_overflow() {
-        let input = "rule = { \"\"{4294967297} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{4294967297} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1308,7 +1308,7 @@ mod tests {
   |
   = cannot repeat 0 times")]
     fn repeat_exact_zero() {
-        let input = "rule = { \"\"{0} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{0} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1324,7 +1324,7 @@ mod tests {
   |
   = number cannot overflow u32")]
     fn repeat_min_overflow() {
-        let input = "rule = { \"\"{4294967297,} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{4294967297,} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1340,7 +1340,7 @@ mod tests {
   |
   = number cannot overflow u32")]
     fn repeat_max_overflow() {
-        let input = "rule = { \"\"{,4294967297} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{,4294967297} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1356,7 +1356,7 @@ mod tests {
   |
   = cannot repeat 0 times")]
     fn repeat_max_zero() {
-        let input = "rule = { \"\"{,0} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{,0} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1372,7 +1372,7 @@ mod tests {
   |
   = number cannot overflow u32")]
     fn repeat_min_max_overflow() {
-        let input = "rule = { \"\"{4294967297,4294967298} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{4294967297,4294967298} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));
@@ -1388,7 +1388,7 @@ mod tests {
   |
   = cannot repeat 0 times")]
     fn repeat_min_max_zero() {
-        let input = "rule = { \"\"{0,0} }";
+        let input: Arc<str> = Arc::from("rule = { \"\"{0,0} }");
 
         let pairs = PestParser::parse(Rule::grammar_rules, input).unwrap();
         unwrap_or_report(consume_rules_with_spans(pairs));

@@ -18,6 +18,8 @@ use alloc::vec::Vec;
 use std::cmp;
 use std::fmt;
 use std::mem;
+#[cfg(test)]
+use std::sync::Arc;
 
 use position::Position;
 use span::Span;
@@ -80,6 +82,7 @@ impl<R: RuleType> Error<R> {
     /// ```
     /// # use pest::error::{Error, ErrorVariant};
     /// # use pest::Position;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[allow(dead_code)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -87,7 +90,7 @@ impl<R: RuleType> Error<R> {
     /// #     open_paren,
     /// #     closed_paren
     /// # }
-    /// # let input = "";
+    /// # let input: Arc<str> = Arc::from("");
     /// # let pos = Position::from_start(input);
     /// let error = Error::new_from_pos(
     ///     ErrorVariant::ParsingError {
@@ -118,6 +121,7 @@ impl<R: RuleType> Error<R> {
     /// ```
     /// # use pest::error::{Error, ErrorVariant};
     /// # use pest::{Position, Span};
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[allow(dead_code)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -125,7 +129,7 @@ impl<R: RuleType> Error<R> {
     /// #     open_paren,
     /// #     closed_paren
     /// # }
-    /// # let input = "";
+    /// # let input: Arc<str> = Arc::from("");
     /// # let start = Position::from_start(input);
     /// # let end = start.clone();
     /// # let span = start.span(&end);
@@ -173,6 +177,7 @@ impl<R: RuleType> Error<R> {
     /// ```
     /// # use pest::error::{Error, ErrorVariant};
     /// # use pest::Position;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[allow(dead_code)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -180,7 +185,7 @@ impl<R: RuleType> Error<R> {
     /// #     open_paren,
     /// #     closed_paren
     /// # }
-    /// # let input = "";
+    /// # let input: Arc<str> = Arc::from("");
     /// # let pos = Position::from_start(input);
     /// Error::new_from_pos(
     ///     ErrorVariant::ParsingError {
@@ -203,6 +208,7 @@ impl<R: RuleType> Error<R> {
     /// ```
     /// # use pest::error::{Error, ErrorVariant};
     /// # use pest::Position;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[allow(dead_code)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -210,7 +216,7 @@ impl<R: RuleType> Error<R> {
     /// #     open_paren,
     /// #     closed_paren
     /// # }
-    /// # let input = "";
+    /// # let input: Arc<str> = Arc::from("");
     /// # let pos = Position::from_start(input);
     /// # let error = Error::new_from_pos(
     /// #     ErrorVariant::ParsingError {
@@ -238,6 +244,7 @@ impl<R: RuleType> Error<R> {
     /// ```
     /// # use pest::error::{Error, ErrorVariant};
     /// # use pest::Position;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[allow(dead_code)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -245,7 +252,7 @@ impl<R: RuleType> Error<R> {
     /// #     open_paren,
     /// #     closed_paren
     /// # }
-    /// # let input = "";
+    /// # let input: Arc<str> = Arc::from("");
     /// # let pos = Position::from_start(input);
     /// Error::new_from_pos(
     ///     ErrorVariant::ParsingError {
@@ -523,7 +530,7 @@ mod tests {
 
     #[test]
     fn display_parsing_error_mixed() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -549,7 +556,7 @@ mod tests {
 
     #[test]
     fn display_parsing_error_positives() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -575,7 +582,7 @@ mod tests {
 
     #[test]
     fn display_parsing_error_negatives() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -601,7 +608,7 @@ mod tests {
 
     #[test]
     fn display_parsing_error_unknown() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -627,7 +634,7 @@ mod tests {
 
     #[test]
     fn display_custom_pos() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::CustomError {
@@ -652,9 +659,9 @@ mod tests {
 
     #[test]
     fn display_custom_span_two_lines() {
-        let input = "ab\ncd\nefgh";
-        let start = position::Position::new(input, 4).unwrap();
-        let end = position::Position::new(input, 9).unwrap();
+        let input: Arc<str> = Arc::from("ab\ncd\nefgh");
+        let start = position::Position::new(input.clone(), 4).unwrap();
+        let end = position::Position::new(input.clone(), 9).unwrap();
         let error: Error<u32> = Error::new_from_span(
             ErrorVariant::CustomError {
                 message: "error: big one".to_owned(),
@@ -679,9 +686,9 @@ mod tests {
 
     #[test]
     fn display_custom_span_three_lines() {
-        let input = "ab\ncd\nefgh";
-        let start = position::Position::new(input, 1).unwrap();
-        let end = position::Position::new(input, 9).unwrap();
+        let input: Arc<str> = Arc::from("ab\ncd\nefgh");
+        let start = position::Position::new(input.clone(), 1).unwrap();
+        let end = position::Position::new(input.clone(), 9).unwrap();
         let error: Error<u32> = Error::new_from_span(
             ErrorVariant::CustomError {
                 message: "error: big one".to_owned(),
@@ -707,9 +714,9 @@ mod tests {
 
     #[test]
     fn display_custom_span_two_lines_inverted_cols() {
-        let input = "abcdef\ngh";
-        let start = position::Position::new(input, 5).unwrap();
-        let end = position::Position::new(input, 8).unwrap();
+        let input: Arc<str> = Arc::from("abcdef\ngh");
+        let start = position::Position::new(input.clone(), 5).unwrap();
+        let end = position::Position::new(input.clone(), 8).unwrap();
         let error: Error<u32> = Error::new_from_span(
             ErrorVariant::CustomError {
                 message: "error: big one".to_owned(),
@@ -734,9 +741,9 @@ mod tests {
 
     #[test]
     fn display_custom_span_end_after_newline() {
-        let input = "abcdef\n";
-        let start = position::Position::new(input, 0).unwrap();
-        let end = position::Position::new(input, 7).unwrap();
+        let input: Arc<str> = Arc::from("abcdef\n");
+        let start = position::Position::new(input.clone(), 0).unwrap();
+        let end = position::Position::new(input.clone(), 7).unwrap();
         assert!(start.at_start());
         assert!(end.at_end());
 
@@ -763,9 +770,9 @@ mod tests {
 
     #[test]
     fn display_custom_span_empty() {
-        let input = "";
-        let start = position::Position::new(input, 0).unwrap();
-        let end = position::Position::new(input, 0).unwrap();
+        let input: Arc<str> = Arc::from("");
+        let start = position::Position::new(input.clone(), 0).unwrap();
+        let end = position::Position::new(input.clone(), 0).unwrap();
         assert!(start.at_start());
         assert!(end.at_end());
 
@@ -792,7 +799,7 @@ mod tests {
 
     #[test]
     fn mapped_parsing_error() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -819,7 +826,7 @@ mod tests {
 
     #[test]
     fn error_with_path() {
-        let input = "ab\ncd\nef";
+        let input: Arc<str> = Arc::from("ab\ncd\nef");
         let pos = position::Position::new(input, 4).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {
@@ -846,7 +853,7 @@ mod tests {
 
     #[test]
     fn underline_with_tabs() {
-        let input = "a\txbc";
+        let input: Arc<str> = Arc::from("a\txbc");
         let pos = position::Position::new(input, 2).unwrap();
         let error: Error<u32> = Error::new_from_pos(
             ErrorVariant::ParsingError {

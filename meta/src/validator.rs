@@ -12,6 +12,8 @@ use std::collections::{HashMap, HashSet};
 use pest::error::{Error, ErrorVariant, InputLocation};
 use pest::iterators::Pairs;
 use pest::Span;
+#[cfg(test)]
+use std::sync::Arc;
 
 use parser::{ParserExpr, ParserNode, ParserRule, Rule};
 use UNICODE_PROPERTY_NAMES;
@@ -547,7 +549,7 @@ mod tests {
   |
   = let is a rust keyword")]
     fn rust_keyword() {
-        let input = "let = { \"a\" }";
+        let input: Arc<str> = Arc::from("let = { \"a\" }");
         unwrap_or_report(validate_pairs(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -563,7 +565,7 @@ mod tests {
   |
   = ANY is a pest keyword")]
     fn pest_keyword() {
-        let input = "ANY = { \"a\" }";
+        let input: Arc<str> = Arc::from("ANY = { \"a\" }");
         unwrap_or_report(validate_pairs(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -579,7 +581,7 @@ mod tests {
   |
   = rule a already defined")]
     fn already_defined() {
-        let input = "a = { \"a\" } a = { \"a\" }";
+        let input: Arc<str> = Arc::from("a = { \"a\" } a = { \"a\" }");
         unwrap_or_report(validate_pairs(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -595,7 +597,7 @@ mod tests {
   |
   = rule b is undefined")]
     fn undefined() {
-        let input = "a = { b }";
+        let input: Arc<str> = Arc::from("a = { b }");
         unwrap_or_report(validate_pairs(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -603,7 +605,7 @@ mod tests {
 
     #[test]
     fn valid_recursion() {
-        let input = "a = { \"\" ~ \"a\"? ~ \"a\"* ~ (\"a\" | \"b\") ~ a }";
+        let input: Arc<str> = Arc::from("a = { \"\" ~ \"a\"? ~ \"a\"* ~ (\"a\" | \"b\") ~ a }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -619,7 +621,7 @@ mod tests {
   |
   = WHITESPACE cannot fail and will repeat infinitely")]
     fn non_failing_whitespace() {
-        let input = "WHITESPACE = { \"\" }";
+        let input: Arc<str> = Arc::from("WHITESPACE = { \"\" }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -635,7 +637,7 @@ mod tests {
   |
   = COMMENT is non-progressing and will repeat infinitely")]
     fn non_progressing_comment() {
-        let input = "COMMENT = { soi }";
+        let input: Arc<str> = Arc::from("COMMENT = { soi }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -651,7 +653,7 @@ mod tests {
   |
   = expression inside repetition cannot fail and will repeat infinitely")]
     fn non_failing_repetition() {
-        let input = "a = { (\"\")* }";
+        let input: Arc<str> = Arc::from("a = { (\"\")* }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -667,7 +669,7 @@ mod tests {
   |
   = expression inside repetition cannot fail and will repeat infinitely")]
     fn indirect_non_failing_repetition() {
-        let input = "a = { \"\" } b = { a* }";
+        let input: Arc<str> = Arc::from("a = { \"\" } b = { a* }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -683,7 +685,7 @@ mod tests {
   |
   = expression inside repetition cannot fail and will repeat infinitely")]
     fn deep_non_failing_repetition() {
-        let input = "a = { \"a\" ~ (\"b\" ~ (\"\")*) }";
+        let input: Arc<str> = Arc::from("a = { \"a\" ~ (\"b\" ~ (\"\")*) }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -699,7 +701,7 @@ mod tests {
   |
   = expression inside repetition is non-progressing and will repeat infinitely")]
     fn non_progressing_repetition() {
-        let input = "a = { (\"\" ~ &\"a\" ~ !\"a\" ~ (soi | eoi))* }";
+        let input: Arc<str> = Arc::from("a = { (\"\" ~ &\"a\" ~ !\"a\" ~ (soi | eoi))* }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -715,7 +717,7 @@ mod tests {
   |
   = expression inside repetition is non-progressing and will repeat infinitely")]
     fn indirect_non_progressing_repetition() {
-        let input = "a = { !\"a\" } b = { a* }";
+        let input: Arc<str> = Arc::from("a = { !\"a\" } b = { a* }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -731,7 +733,7 @@ mod tests {
   |
   = rule a is left-recursive (a -> a); pest::prec_climber might be useful in this case")]
     fn simple_left_recursion() {
-        let input = "a = { a }";
+        let input: Arc<str> = Arc::from("a = { a }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -754,7 +756,7 @@ mod tests {
   |
   = rule a is left-recursive (a -> b -> a); pest::prec_climber might be useful in this case")]
     fn indirect_left_recursion() {
-        let input = "a = { b } b = { a }";
+        let input: Arc<str> = Arc::from("a = { b } b = { a }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -770,7 +772,7 @@ mod tests {
   |
   = rule a is left-recursive (a -> a); pest::prec_climber might be useful in this case")]
     fn non_failing_left_recursion() {
-        let input = "a = { \"\" ~ \"a\"? ~ \"a\"* ~ (\"a\" | \"\") ~ a }";
+        let input: Arc<str> = Arc::from("a = { \"\" ~ \"a\"? ~ \"a\"* ~ (\"a\" | \"\") ~ a }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -786,7 +788,7 @@ mod tests {
   |
   = rule a is left-recursive (a -> a); pest::prec_climber might be useful in this case")]
     fn non_primary_choice_left_recursion() {
-        let input = "a = { \"a\" | a }";
+        let input: Arc<str> = Arc::from("a = { \"a\" | a }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -802,7 +804,7 @@ mod tests {
   |
   = expression cannot fail; following choices cannot be reached")]
     fn lhs_non_failing_choice() {
-        let input = "a = { \"a\"* | \"a\" | \"b\" }";
+        let input: Arc<str> = Arc::from("a = { \"a\"* | \"a\" | \"b\" }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -818,7 +820,7 @@ mod tests {
   |
   = expression cannot fail; following choices cannot be reached")]
     fn lhs_non_failing_choice_middle() {
-        let input = "a = { \"a\" | \"a\"* | \"b\" }";
+        let input: Arc<str> = Arc::from("a = { \"a\" | \"a\"* | \"b\" }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -841,7 +843,7 @@ mod tests {
   |
   = expression cannot fail; following choices cannot be reached")]
     fn lhs_non_failing_nested_choices() {
-        let input = "a = { b | \"a\" } b = { \"b\"* | \"c\" }";
+        let input: Arc<str> = Arc::from("a = { b | \"a\" } b = { \"b\"* | \"c\" }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));
@@ -849,7 +851,7 @@ mod tests {
 
     #[test]
     fn skip_can_be_defined() {
-        let input = "skip = { \"\" }";
+        let input: Arc<str> = Arc::from("skip = { \"\" }");
         unwrap_or_report(consume_rules(
             PestParser::parse(Rule::grammar_rules, input).unwrap(),
         ));

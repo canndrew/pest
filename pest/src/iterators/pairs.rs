@@ -62,6 +62,7 @@ impl<R: RuleType> Pairs<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -69,7 +70,7 @@ impl<R: RuleType> Pairs<R> {
     ///     b
     /// }
     ///
-    /// let input = "a b";
+    /// let input: Arc<str> = Arc::from("a b");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pairs with Rule::a and Rule::b ...
     /// #     state.rule(Rule::a, |s| s.match_string("a")).and_then(|s| s.skip(1))
@@ -98,6 +99,7 @@ impl<R: RuleType> Pairs<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -105,7 +107,7 @@ impl<R: RuleType> Pairs<R> {
     ///     b
     /// }
     ///
-    /// let input = "a b";
+    /// let input: Arc<str> = Arc::from("a b");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pairs with Rule::a and Rule::b ...
     /// #     state.rule(Rule::a, |s| s.match_string("a")).and_then(|s| s.skip(1))
@@ -127,6 +129,7 @@ impl<R: RuleType> Pairs<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -134,7 +137,7 @@ impl<R: RuleType> Pairs<R> {
     ///     b
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pairs = pest::state(input, |state| {
     ///     // generating nested Token pair with Rule::b inside Rule::a
     /// #     state.rule(Rule::a, |state| {
@@ -157,13 +160,14 @@ impl<R: RuleType> Pairs<R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -305,6 +309,7 @@ impl<R: RuleType> ::serde::Serialize for Pairs<R> {
 mod tests {
     use super::super::super::macros::tests::*;
     use super::super::super::Parser;
+    use std::sync::Arc;
     use alloc::borrow::ToOwned;
     use alloc::format;
     use alloc::vec;
@@ -313,7 +318,7 @@ mod tests {
     #[test]
     #[cfg(feature = "pretty-print")]
     fn test_pretty_print() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         let expected = r#"{
   "pos": [
@@ -360,28 +365,28 @@ mod tests {
 
     #[test]
     fn as_str() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.as_str(), "abcde");
     }
 
     #[test]
     fn as_str_empty() {
-        let mut pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let mut pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.nth(1).unwrap().into_inner().as_str(), "");
     }
 
     #[test]
     fn concat() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.concat(), "abce");
     }
 
     #[test]
     fn pairs_debug() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         #[rustfmt::skip]
         assert_eq!(
@@ -398,7 +403,7 @@ mod tests {
 
     #[test]
     fn pairs_display() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(
             format!("{}", pairs),
@@ -408,7 +413,7 @@ mod tests {
 
     #[test]
     fn iter_for_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
         assert_eq!(
             pairs.map(|p| p.as_rule()).collect::<Vec<Rule>>(),
             vec![Rule::a, Rule::c]
@@ -417,7 +422,7 @@ mod tests {
 
     #[test]
     fn double_ended_iter_for_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
         assert_eq!(
             pairs.rev().map(|p| p.as_rule()).collect::<Vec<Rule>>(),
             vec![Rule::c, Rule::a]

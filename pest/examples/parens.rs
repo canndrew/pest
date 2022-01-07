@@ -1,6 +1,9 @@
 extern crate pest;
 
-use std::io::{self, Write};
+use std::{
+    sync::Arc,
+    io::{self, Write},
+};
 
 use pest::error::Error;
 use pest::iterators::Pairs;
@@ -17,7 +20,7 @@ enum Rule {
 struct ParenParser;
 
 impl Parser<Rule> for ParenParser {
-    fn parse(rule: Rule, input: &str) -> Result<Pairs<Rule>, Error<Rule>> {
+    fn parse(rule: Rule, input: Arc<str>) -> Result<Pairs<Rule>, Error<Rule>> {
         fn expr(state: Box<ParserState<Rule>>) -> ParseResult<Box<ParserState<Rule>>> {
             state.sequence(|s| s.repeat(|s| paren(s)).and_then(|s| s.end_of_input()))
         }
@@ -67,7 +70,7 @@ fn main() {
         io::stdin().read_line(&mut line).unwrap();
         line.pop();
 
-        match ParenParser::parse(Rule::expr, &line) {
+        match ParenParser::parse(Rule::expr, Arc::from(line)) {
             Ok(pairs) => println!("{:?}", expr(pairs)),
             Err(e) => println!("\n{}", e),
         };
