@@ -11,10 +11,10 @@ use alloc::format;
 use alloc::rc::Rc;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::ptr;
-use core::str;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::str;
+use std::sync::Arc;
 
 #[cfg(feature = "pretty-print")]
 use serde::ser::SerializeStruct;
@@ -31,16 +31,16 @@ use RuleType;
 /// [`pest::state`]: ../fn.state.html
 /// [`Pair::into_inner`]: struct.Pair.html#method.into_inner
 #[derive(Clone)]
-pub struct Pairs<'i, R> {
+pub struct Pairs<R> {
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &'i str,
+    input: Arc<str>,
     start: usize,
     end: usize,
 }
 
 pub fn new<R: RuleType>(
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &str,
+    input: Arc<str>,
     start: usize,
     end: usize,
 ) -> Pairs<R> {
@@ -52,7 +52,7 @@ pub fn new<R: RuleType>(
     }
 }
 
-impl<'i, R: RuleType> Pairs<'i, R> {
+impl<R: RuleType> Pairs<R> {
     /// Captures a slice from the `&str` defined by the starting position of the first token `Pair`
     /// and the ending position of the last token `Pair` of the `Pairs`. This also captures
     /// the input between those two token `Pair`s.
@@ -62,6 +62,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -69,7 +70,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     ///     b
     /// }
     ///
-    /// let input = "a b";
+    /// let input: Arc<str> = Arc::from("a b");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pairs with Rule::a and Rule::b ...
     /// #     state.rule(Rule::a, |s| s.match_string("a")).and_then(|s| s.skip(1))
@@ -79,7 +80,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// assert_eq!(pairs.as_str(), "a b");
     /// ```
     #[inline]
-    pub fn as_str(&self) -> &'i str {
+    pub fn as_str(&self) -> &str {
         if self.start < self.end {
             let start = self.pos(self.start);
             let end = self.pos(self.end - 1);
@@ -98,6 +99,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -105,7 +107,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     ///     b
     /// }
     ///
-    /// let input = "a b";
+    /// let input: Arc<str> = Arc::from("a b");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pairs with Rule::a and Rule::b ...
     /// #     state.rule(Rule::a, |s| s.match_string("a")).and_then(|s| s.skip(1))
@@ -127,6 +129,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
@@ -134,7 +137,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     ///     b
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pairs = pest::state(input, |state| {
     ///     // generating nested Token pair with Rule::b inside Rule::a
     /// #     state.rule(Rule::a, |state| {
@@ -146,7 +149,7 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// assert_eq!(tokens.len(), 4);
     /// ```
     #[inline]
-    pub fn flatten(self) -> FlatPairs<'i, R> {
+    pub fn flatten(self) -> FlatPairs<R> {
         unsafe { flat_pairs::new(self.queue, self.input, self.start, self.end) }
     }
 
@@ -157,13 +160,14 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pairs = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -173,15 +177,15 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     /// assert_eq!(tokens.len(), 2);
     /// ```
     #[inline]
-    pub fn tokens(self) -> Tokens<'i, R> {
+    pub fn tokens(self) -> Tokens<R> {
         tokens::new(self.queue, self.input, self.start, self.end)
     }
 
     /// Peek at the first inner `Pair` without changing the position of this iterator.
     #[inline]
-    pub fn peek(&self) -> Option<Pair<'i, R>> {
+    pub fn peek(&self) -> Option<Pair<R>> {
         if self.start < self.end {
-            Some(unsafe { pair::new(Rc::clone(&self.queue), self.input, self.start) })
+            Some(unsafe { pair::new(Rc::clone(&self.queue), self.input.clone(), self.start) })
         } else {
             None
         }
@@ -221,8 +225,8 @@ impl<'i, R: RuleType> Pairs<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> Iterator for Pairs<'i, R> {
-    type Item = Pair<'i, R>;
+impl<R: RuleType> Iterator for Pairs<R> {
+    type Item = Pair<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let pair = self.peek()?;
@@ -231,7 +235,7 @@ impl<'i, R: RuleType> Iterator for Pairs<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> DoubleEndedIterator for Pairs<'i, R> {
+impl<R: RuleType> DoubleEndedIterator for Pairs<R> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.end <= self.start {
             return None;
@@ -239,19 +243,19 @@ impl<'i, R: RuleType> DoubleEndedIterator for Pairs<'i, R> {
 
         self.end = self.pair_from_end();
 
-        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input, self.end) };
+        let pair = unsafe { pair::new(Rc::clone(&self.queue), self.input.clone(), self.end) };
 
         Some(pair)
     }
 }
 
-impl<'i, R: RuleType> fmt::Debug for Pairs<'i, R> {
+impl<R: RuleType> fmt::Debug for Pairs<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_list().entries(self.clone()).finish()
     }
 }
 
-impl<'i, R: RuleType> fmt::Display for Pairs<'i, R> {
+impl<R: RuleType> fmt::Display for Pairs<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -264,28 +268,28 @@ impl<'i, R: RuleType> fmt::Display for Pairs<'i, R> {
     }
 }
 
-impl<'i, R: PartialEq> PartialEq for Pairs<'i, R> {
-    fn eq(&self, other: &Pairs<'i, R>) -> bool {
+impl<R: PartialEq> PartialEq for Pairs<R> {
+    fn eq(&self, other: &Pairs<R>) -> bool {
         Rc::ptr_eq(&self.queue, &other.queue)
-            && ptr::eq(self.input, other.input)
+            && Arc::ptr_eq(&self.input, &other.input)
             && self.start == other.start
             && self.end == other.end
     }
 }
 
-impl<'i, R: Eq> Eq for Pairs<'i, R> {}
+impl<R: Eq> Eq for Pairs<R> {}
 
-impl<'i, R: Hash> Hash for Pairs<'i, R> {
+impl<R: Hash> Hash for Pairs<R> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         (&*self.queue as *const Vec<QueueableToken<R>>).hash(state);
-        (self.input as *const str).hash(state);
+        Arc::as_ptr(&self.input).hash(state);
         self.start.hash(state);
         self.end.hash(state);
     }
 }
 
 #[cfg(feature = "pretty-print")]
-impl<'i, R: RuleType> ::serde::Serialize for Pairs<'i, R> {
+impl<R: RuleType> ::serde::Serialize for Pairs<R> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: ::serde::Serializer,
@@ -305,6 +309,7 @@ impl<'i, R: RuleType> ::serde::Serialize for Pairs<'i, R> {
 mod tests {
     use super::super::super::macros::tests::*;
     use super::super::super::Parser;
+    use std::sync::Arc;
     use alloc::borrow::ToOwned;
     use alloc::format;
     use alloc::vec;
@@ -313,7 +318,7 @@ mod tests {
     #[test]
     #[cfg(feature = "pretty-print")]
     fn test_pretty_print() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         let expected = r#"{
   "pos": [
@@ -360,28 +365,28 @@ mod tests {
 
     #[test]
     fn as_str() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.as_str(), "abcde");
     }
 
     #[test]
     fn as_str_empty() {
-        let mut pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let mut pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.nth(1).unwrap().into_inner().as_str(), "");
     }
 
     #[test]
     fn concat() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(pairs.concat(), "abce");
     }
 
     #[test]
     fn pairs_debug() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         #[rustfmt::skip]
         assert_eq!(
@@ -398,7 +403,7 @@ mod tests {
 
     #[test]
     fn pairs_display() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
 
         assert_eq!(
             format!("{}", pairs),
@@ -408,7 +413,7 @@ mod tests {
 
     #[test]
     fn iter_for_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
         assert_eq!(
             pairs.map(|p| p.as_rule()).collect::<Vec<Rule>>(),
             vec![Rule::a, Rule::c]
@@ -417,7 +422,7 @@ mod tests {
 
     #[test]
     fn double_ended_iter_for_pairs() {
-        let pairs = AbcParser::parse(Rule::a, "abcde").unwrap();
+        let pairs = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap();
         assert_eq!(
             pairs.rev().map(|p| p.as_rule()).collect::<Vec<Rule>>(),
             vec![Rule::c, Rule::a]

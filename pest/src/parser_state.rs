@@ -11,7 +11,8 @@ use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::ops::Range;
+use std::ops::Range;
+use std::sync::Arc;
 
 use error::{Error, ErrorVariant};
 use iterators::{pairs, QueueableToken};
@@ -54,15 +55,15 @@ pub enum MatchDir {
 ///
 /// [`Parser`]: trait.Parser.html
 #[derive(Debug)]
-pub struct ParserState<'i, R: RuleType> {
-    position: Position<'i>,
+pub struct ParserState<R: RuleType> {
+    position: Position,
     queue: Vec<QueueableToken<R>>,
     lookahead: Lookahead,
     pos_attempts: Vec<R>,
     neg_attempts: Vec<R>,
     attempt_pos: usize,
     atomicity: Atomicity,
-    stack: Stack<Span<'i>>,
+    stack: Stack<Span>,
 }
 
 /// Creates a `ParserState` from a `&str`, supplying it to a closure `f`.
@@ -71,14 +72,15 @@ pub struct ParserState<'i, R: RuleType> {
 ///
 /// ```
 /// # use pest;
-/// let input = "";
+/// # use std::sync::Arc;
+/// let input: Arc<str> = Arc::from("");
 /// pest::state::<(), _>(input, |s| Ok(s)).unwrap();
 /// ```
-pub fn state<'i, R: RuleType, F>(input: &'i str, f: F) -> Result<pairs::Pairs<'i, R>, Error<R>>
+pub fn state<'i, R: RuleType, F>(input: Arc<str>, f: F) -> Result<pairs::Pairs<R>, Error<R>>
 where
-    F: FnOnce(Box<ParserState<'i, R>>) -> ParseResult<Box<ParserState<'i, R>>>,
+    F: FnOnce(Box<ParserState<R>>) -> ParseResult<Box<ParserState<R>>>,
 {
-    let state = ParserState::new(input);
+    let state = ParserState::new(input.clone());
 
     match f(state) {
         Ok(state) => {
@@ -103,7 +105,7 @@ where
     }
 }
 
-impl<'i, R: RuleType> ParserState<'i, R> {
+impl<R: RuleType> ParserState<R> {
     /// Allocates a fresh `ParserState` object to the heap and returns the owned `Box`. This `Box`
     /// will be passed from closure to closure based on the needs of the specified `Parser`.
     ///
@@ -111,11 +113,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
-    /// let input = "";
+    /// # use std::sync::Arc;
+    /// let input: Arc<str> = Arc::from("");
     /// let state: Box<pest::ParserState<&str>> = pest::ParserState::new(input);
     /// ```
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(input: &'i str) -> Box<Self> {
+    pub fn new(input: Arc<str>) -> Box<Self> {
         Box::new(ParserState {
             position: Position::from_start(input),
             queue: vec![],
@@ -134,18 +137,19 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let position = state.position();
     /// assert_eq!(position.pos(), 0);
     /// ```
-    pub fn position(&self) -> &Position<'i> {
+    pub fn position(&self) -> &Position {
         &self.position
     }
 
@@ -156,13 +160,14 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// ```
     /// # use pest;
     /// # use pest::Atomicity;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let atomicity = state.atomicity();
     /// assert_eq!(atomicity, Atomicity::NonAtomic);
@@ -178,13 +183,14 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "a";
+    /// let input: Arc<str> = Arc::from("a");
     /// let pairs: Vec<_> = pest::state(input, |state| {
     ///     state.rule(Rule::a, |s| Ok(s))
     /// }).unwrap().collect();
@@ -340,13 +346,14 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "a";
+    /// let input: Arc<str> = Arc::from("a");
     /// let pairs: Vec<_> = pest::state(input, |state| {
     ///     state.sequence(|s| {
     ///         s.rule(Rule::a, |s| Ok(s)).and_then(|s| {
@@ -387,21 +394,22 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "aab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("aab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.repeat(|s| {
     ///     s.match_string("a")
     /// });
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// result = state.repeat(|s| {
     ///     s.match_string("b")
     /// });
@@ -430,20 +438,21 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let result = state.optional(|s| {
     ///     s.match_string("ab")
     /// });
     /// assert!(result.is_ok());
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// let result = state.optional(|s| {
     ///     s.match_string("ac")
     /// });
@@ -467,17 +476,18 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let result = state.match_char_by(|c| c.is_ascii());
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     ///
-    /// let input = "❤";
+    /// let input: Arc<str> = Arc::from("❤");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let result = state.match_char_by(|c| c.is_ascii());
     /// assert!(result.is_err());
@@ -502,17 +512,18 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.match_string("ab");
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// result = state.match_string("ac");
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
@@ -533,17 +544,18 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.match_insensitive("AB");
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// result = state.match_insensitive("AC");
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
@@ -564,17 +576,18 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.match_range('a'..'z');
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// result = state.match_range('A'..'Z');
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
@@ -595,17 +608,18 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.skip(1);
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// result = state.skip(3);
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
@@ -626,11 +640,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "abcd";
+    /// let input: Arc<str> = Arc::from("abcd");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.skip_until(&["c", "d"]);
     /// assert!(result.is_ok());
@@ -649,16 +664,17 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.start_of_input();
     /// assert!(result.is_ok());
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// state = state.match_string("ab").unwrap();
     /// result = state.start_of_input();
     /// assert!(result.is_err());
@@ -679,16 +695,17 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
-    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
+    /// let input: Arc<str> = Arc::from("ab");
+    /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input.clone());
     /// let mut result = state.end_of_input();
     /// assert!(result.is_err());
     ///
-    /// state = pest::ParserState::new(input);
+    /// state = pest::ParserState::new(input.clone());
     /// state = state.match_string("ab").unwrap();
     /// result = state.end_of_input();
     /// assert!(result.is_ok());
@@ -711,13 +728,14 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "a";
+    /// let input: Arc<str> = Arc::from("a");
     /// let pairs: Vec<_> = pest::state(input, |state| {
     ///     state.lookahead(true, |state| {
     ///         state.rule(Rule::a, |s| Ok(s))
@@ -778,13 +796,14 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest::{self, Atomicity};
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "a";
+    /// let input: Arc<str> = Arc::from("a");
     /// let pairs: Vec<_> = pest::state(input, |state| {
     ///     state.atomic(Atomicity::Atomic, |s| {
     ///         s.rule(Rule::a, |s| Ok(s))
@@ -831,11 +850,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.stack_push(|state| state.match_string("a"));
     /// assert!(result.is_ok());
@@ -867,11 +887,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "aa";
+    /// let input: Arc<str> = Arc::from("aa");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_peek()
@@ -881,11 +902,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// ```
     #[inline]
     pub fn stack_peek(self: Box<Self>) -> ParseResult<Box<Self>> {
-        let string = self
+        let span = self
             .stack
             .peek()
             .expect("peek was called on empty stack")
-            .as_str();
+            .clone();
+        let string = span.as_str();
         self.match_string(string)
     }
 
@@ -896,11 +918,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "aa";
+    /// let input: Arc<str> = Arc::from("aa");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_pop()
@@ -910,11 +933,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// ```
     #[inline]
     pub fn stack_pop(mut self: Box<Self>) -> ParseResult<Box<Self>> {
-        let string = self
+        let span = self
             .stack
             .pop()
             .expect("pop was called on empty stack")
-            .as_str();
+            .clone();
+        let string = span.as_str();
         self.match_string(string)
     }
 
@@ -924,11 +948,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest::{self, MatchDir};
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "abcd cd cb";
+    /// let input: Arc<str> = Arc::from("abcd cd cb");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state
     ///     .stack_push(|state| state.match_string("a"))
@@ -981,11 +1006,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "abba";
+    /// let input: Arc<str> = Arc::from("abba");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state
     ///     .stack_push(|state| state.match_string("a"))
@@ -1004,12 +1030,13 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     /// # Examples
     ///
     /// ```
-    /// /// # use pest;
+    /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "aaaa";
+    /// let input: Arc<str> = Arc::from("aaaa");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(|state| {
     ///     state.stack_push(|state| state.match_string("a"))
@@ -1043,11 +1070,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "aa";
+    /// let input: Arc<str> = Arc::from("aa");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_drop()
@@ -1070,11 +1098,12 @@ impl<'i, R: RuleType> ParserState<'i, R> {
     ///
     /// ```
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let mut state: Box<pest::ParserState<Rule>> = pest::ParserState::new(input);
     /// let mut result = state.restore_on_err(|state| state.stack_push(|state|
     ///     state.match_string("a")).and_then(|state| state.match_string("a"))

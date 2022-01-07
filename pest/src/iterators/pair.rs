@@ -12,10 +12,10 @@ use alloc::rc::Rc;
 #[cfg(feature = "pretty-print")]
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::ptr;
-use core::str;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::str;
+use std::sync::Arc;
 
 #[cfg(feature = "pretty-print")]
 use serde::ser::SerializeStruct;
@@ -35,12 +35,12 @@ use RuleType;
 ///
 /// [`Token`]: ../enum.Token.html
 #[derive(Clone)]
-pub struct Pair<'i, R> {
+pub struct Pair<R> {
     /// # Safety
     ///
     /// All `QueueableToken`s' `input_pos` must be valid character boundary indices into `input`.
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &'i str,
+    input: Arc<str>,
     /// Token index into `queue`.
     start: usize,
 }
@@ -50,7 +50,7 @@ pub struct Pair<'i, R> {
 /// All `QueueableToken`s' `input_pos` must be valid character boundary indices into `input`.
 pub unsafe fn new<R: RuleType>(
     queue: Rc<Vec<QueueableToken<R>>>,
-    input: &str,
+    input: Arc<str>,
     start: usize,
 ) -> Pair<R> {
     Pair {
@@ -60,7 +60,7 @@ pub unsafe fn new<R: RuleType>(
     }
 }
 
-impl<'i, R: RuleType> Pair<'i, R> {
+impl<R: RuleType> Pair<R> {
     /// Returns the `Rule` of the `Pair`.
     ///
     /// # Examples
@@ -68,13 +68,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -97,13 +98,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -112,7 +114,7 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// assert_eq!(pair.as_str(), "ab");
     /// ```
     #[inline]
-    pub fn as_str(&self) -> &'i str {
+    pub fn as_str(&self) -> &str {
         let start = self.pos(self.start);
         let end = self.pos(self.pair());
 
@@ -127,13 +129,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -143,7 +146,7 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     #[inline]
     #[deprecated(since = "2.0.0", note = "Please use `as_span` instead")]
-    pub fn into_span(self) -> Span<'i> {
+    pub fn into_span(self) -> Span {
         self.as_span()
     }
 
@@ -154,13 +157,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     ab
     /// }
     ///
-    /// let input = "ab";
+    /// let input: Arc<str> = Arc::from("ab");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::ab ...
     /// #     state.rule(Rule::ab, |s| s.match_string("ab"))
@@ -169,12 +173,12 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// assert_eq!(pair.as_span().as_str(), "ab");
     /// ```
     #[inline]
-    pub fn as_span(&self) -> Span<'i> {
+    pub fn as_span(&self) -> Span {
         let start = self.pos(self.start);
         let end = self.pos(self.pair());
 
         // Generated positions always come from Positions and are UTF-8 borders.
-        unsafe { span::Span::new_unchecked(self.input, start, end) }
+        unsafe { span::Span::new_unchecked(self.input.clone(), start, end) }
     }
 
     /// Returns the inner `Pairs` between the `Pair`, consuming it.
@@ -184,13 +188,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -199,7 +204,7 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// assert!(pair.into_inner().next().is_none());
     /// ```
     #[inline]
-    pub fn into_inner(self) -> Pairs<'i, R> {
+    pub fn into_inner(self) -> Pairs<R> {
         let pair = self.pair();
 
         pairs::new(self.queue, self.input, self.start + 1, pair)
@@ -212,13 +217,14 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// ```
     /// # use std::rc::Rc;
     /// # use pest;
+    /// # use std::sync::Arc;
     /// # #[allow(non_camel_case_types)]
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {
     ///     a
     /// }
     ///
-    /// let input = "";
+    /// let input: Arc<str> = Arc::from("");
     /// let pair = pest::state(input, |state| {
     ///     // generating Token pair with Rule::a ...
     /// #     state.rule(Rule::a, |s| Ok(s))
@@ -228,7 +234,7 @@ impl<'i, R: RuleType> Pair<'i, R> {
     /// assert_eq!(tokens.len(), 2);
     /// ```
     #[inline]
-    pub fn tokens(self) -> Tokens<'i, R> {
+    pub fn tokens(self) -> Tokens<R> {
         let end = self.pair();
 
         tokens::new(self.queue, self.input, self.start, end + 1)
@@ -259,15 +265,15 @@ impl<'i, R: RuleType> Pair<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> Pairs<'i, R> {
+impl<R: RuleType> Pairs<R> {
     /// Create a new `Pairs` iterator containing just the single `Pair`.
-    pub fn single(pair: Pair<'i, R>) -> Self {
+    pub fn single(pair: Pair<R>) -> Self {
         let end = pair.pair();
         pairs::new(pair.queue, pair.input, pair.start, end)
     }
 }
 
-impl<'i, R: RuleType> fmt::Debug for Pair<'i, R> {
+impl<R: RuleType> fmt::Debug for Pair<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Pair")
             .field("rule", &self.as_rule())
@@ -277,7 +283,7 @@ impl<'i, R: RuleType> fmt::Debug for Pair<'i, R> {
     }
 }
 
-impl<'i, R: RuleType> fmt::Display for Pair<'i, R> {
+impl<R: RuleType> fmt::Display for Pair<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let rule = self.as_rule();
         let start = self.pos(self.start);
@@ -302,26 +308,26 @@ impl<'i, R: RuleType> fmt::Display for Pair<'i, R> {
     }
 }
 
-impl<'i, R: PartialEq> PartialEq for Pair<'i, R> {
-    fn eq(&self, other: &Pair<'i, R>) -> bool {
+impl<R: PartialEq> PartialEq for Pair<R> {
+    fn eq(&self, other: &Pair<R>) -> bool {
         Rc::ptr_eq(&self.queue, &other.queue)
-            && ptr::eq(self.input, other.input)
+            && Arc::ptr_eq(&self.input, &other.input)
             && self.start == other.start
     }
 }
 
-impl<'i, R: Eq> Eq for Pair<'i, R> {}
+impl<R: Eq> Eq for Pair<R> {}
 
-impl<'i, R: Hash> Hash for Pair<'i, R> {
+impl<R: Hash> Hash for Pair<R> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         (&*self.queue as *const Vec<QueueableToken<R>>).hash(state);
-        (self.input as *const str).hash(state);
+        Arc::as_ptr(&self.input).hash(state);
         self.start.hash(state);
     }
 }
 
 #[cfg(feature = "pretty-print")]
-impl<'i, R: RuleType> ::serde::Serialize for Pair<'i, R> {
+impl<R: RuleType> ::serde::Serialize for Pair<R> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: ::serde::Serializer,
@@ -349,11 +355,12 @@ impl<'i, R: RuleType> ::serde::Serialize for Pair<'i, R> {
 mod tests {
     use macros::tests::*;
     use parser::Parser;
+    use std::sync::Arc;
 
     #[test]
     #[cfg(feature = "pretty-print")]
     fn test_pretty_print() {
-        let pair = AbcParser::parse(Rule::a, "abcde").unwrap().next().unwrap();
+        let pair = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap().next().unwrap();
 
         let expected = r#"{
   "pos": [
@@ -384,7 +391,7 @@ mod tests {
 
     #[test]
     fn pair_into_inner() {
-        let pair = AbcParser::parse(Rule::a, "abcde").unwrap().next().unwrap(); // the tokens a(b())
+        let pair = AbcParser::parse(Rule::a, Arc::from("abcde")).unwrap().next().unwrap(); // the tokens a(b())
 
         let pairs = pair.into_inner(); // the tokens b()
 

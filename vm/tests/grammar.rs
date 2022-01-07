@@ -12,6 +12,7 @@ extern crate pest_meta;
 #[macro_use]
 extern crate pest_vm;
 
+use std::sync::Arc;
 use pest_meta::parser::Rule;
 use pest_meta::{optimizer, parser};
 use pest_vm::Vm;
@@ -19,7 +20,7 @@ use pest_vm::Vm;
 const GRAMMAR: &'static str = include_str!("grammar.pest");
 
 fn vm() -> Vm {
-    let pairs = parser::parse(Rule::grammar_rules, GRAMMAR).unwrap();
+    let pairs = parser::parse(Rule::grammar_rules, Arc::from(GRAMMAR)).unwrap();
     let ast = parser::consume_rules(pairs).unwrap();
     Vm::new(optimizer::optimize(ast))
 }

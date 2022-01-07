@@ -55,11 +55,11 @@ pub fn generate(
     let parser_impl = quote! {
         #[allow(clippy::all)]
         impl #impl_generics ::pest::Parser<Rule> for #name #ty_generics #where_clause {
-            fn parse<'i>(
+            fn parse(
                 rule: Rule,
-                input: &'i str
+                input: ::std::sync::Arc<str>,
             ) -> #result<
-                ::pest::iterators::Pairs<'i, Rule>,
+                ::pest::iterators::Pairs<Rule>,
                 ::pest::error::Error<Rule>
             > {
                 mod rules {
@@ -77,7 +77,7 @@ pub fn generate(
                     pub use self::visible::*;
                 }
 
-                ::pest::state(input, |state| {
+                ::pest::state(::std::sync::Arc::from(input), |state| {
                     match rule {
                         #patterns
                     }
@@ -1014,11 +1014,11 @@ mod tests {
 
                 #[allow(clippy::all)]
                 impl ::pest::Parser<Rule> for MyParser {
-                    fn parse<'i>(
+                    fn parse(
                         rule: Rule,
-                        input: &'i str
+                        input: ::std::sync::Arc<str>,
                     ) -> #result<
-                        ::pest::iterators::Pairs<'i, Rule>,
+                        ::pest::iterators::Pairs<Rule>,
                         ::pest::error::Error<Rule>
                     > {
                         mod rules {
@@ -1052,7 +1052,7 @@ mod tests {
                             pub use self::visible::*;
                         }
 
-                        ::pest::state(input, |state| {
+                        ::pest::state(::std::sync::Arc::from(input), |state| {
                             match rule {
                                 Rule::a => rules::a(state)
                             }

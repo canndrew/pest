@@ -10,6 +10,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use alloc::vec;
+use std::sync::Arc;
 
 #[macro_use]
 extern crate pest;
@@ -24,7 +25,7 @@ struct ReportingParser;
 fn choices() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::choices,
         positives: vec![Rule::a, Rule::b, Rule::c],
         negatives: vec![],
@@ -36,7 +37,7 @@ fn choices() {
 fn choices_no_progress() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::choices_no_progress,
         positives: vec![Rule::choices_no_progress],
         negatives: vec![],
@@ -48,7 +49,7 @@ fn choices_no_progress() {
 fn choices_a_progress() {
     fails_with! {
         parser: ReportingParser,
-        input: "a",
+        input: Arc::from("a"),
         rule: Rule::choices_a_progress,
         positives: vec![Rule::a],
         negatives: vec![],
@@ -60,7 +61,7 @@ fn choices_a_progress() {
 fn choices_b_progress() {
     fails_with! {
         parser: ReportingParser,
-        input: "b",
+        input: Arc::from("b"),
         rule: Rule::choices_b_progress,
         positives: vec![Rule::b],
         negatives: vec![],
@@ -72,7 +73,7 @@ fn choices_b_progress() {
 fn nested() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::level1,
         positives: vec![Rule::a, Rule::b, Rule::c],
         negatives: vec![],
@@ -84,7 +85,7 @@ fn nested() {
 fn negative() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::negative,
         positives: vec![],
         negatives: vec![Rule::d],
@@ -96,7 +97,7 @@ fn negative() {
 fn negative_match() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::negative_match,
         positives: vec![Rule::b],
         negatives: vec![],
@@ -108,7 +109,7 @@ fn negative_match() {
 fn mixed() {
     fails_with! {
         parser: ReportingParser,
-        input: "x",
+        input: Arc::from("x"),
         rule: Rule::mixed,
         positives: vec![Rule::a],
         negatives: vec![Rule::d],
@@ -120,7 +121,7 @@ fn mixed() {
 fn mixed_progress() {
     fails_with! {
         parser: ReportingParser,
-        input: "b",
+        input: Arc::from("b"),
         rule: Rule::mixed_progress,
         positives: vec![Rule::a],
         negatives: vec![],

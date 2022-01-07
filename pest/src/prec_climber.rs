@@ -12,8 +12,8 @@
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use core::iter::Peekable;
-use core::ops::BitOr;
+use std::iter::Peekable;
+use std::ops::BitOr;
 
 use iterators::Pair;
 use RuleType;
@@ -296,11 +296,11 @@ impl<R: RuleType> PrecClimber<R> {
     ///
     /// let result = climber.climb(pairs, primary, infix);
     /// ```
-    pub fn climb<'i, P, F, G, T>(&self, mut pairs: P, mut primary: F, mut infix: G) -> T
+    pub fn climb<P, F, G, T>(&self, mut pairs: P, mut primary: F, mut infix: G) -> T
     where
-        P: Iterator<Item = Pair<'i, R>>,
-        F: FnMut(Pair<'i, R>) -> T,
-        G: FnMut(T, Pair<'i, R>, T) -> T,
+        P: Iterator<Item = Pair<R>>,
+        F: FnMut(Pair<R>) -> T,
+        G: FnMut(T, Pair<R>, T) -> T,
     {
         let lhs = primary(
             pairs
@@ -310,7 +310,7 @@ impl<R: RuleType> PrecClimber<R> {
         self.climb_rec(lhs, 0, &mut pairs.peekable(), &mut primary, &mut infix)
     }
 
-    fn climb_rec<'i, P, F, G, T>(
+    fn climb_rec<P, F, G, T>(
         &self,
         mut lhs: T,
         min_prec: u32,
@@ -319,9 +319,9 @@ impl<R: RuleType> PrecClimber<R> {
         infix: &mut G,
     ) -> T
     where
-        P: Iterator<Item = Pair<'i, R>>,
-        F: FnMut(Pair<'i, R>) -> T,
-        G: FnMut(T, Pair<'i, R>, T) -> T,
+        P: Iterator<Item = Pair<R>>,
+        F: FnMut(Pair<R>) -> T,
+        G: FnMut(T, Pair<R>, T) -> T,
     {
         while pairs.peek().is_some() {
             let rule = pairs.peek().unwrap().as_rule();

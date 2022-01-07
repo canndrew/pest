@@ -7,6 +7,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use std::sync::Arc;
 use error::Error;
 use iterators::Pairs;
 use RuleType;
@@ -14,5 +15,5 @@ use RuleType;
 /// A trait with a single method that parses strings.
 pub trait Parser<R: RuleType> {
     /// Parses a `&str` starting from `rule`.
-    fn parse(rule: R, input: &str) -> Result<Pairs<R>, Error<R>>;
+    fn parse(rule: R, input: Arc<str>) -> Result<Pairs<R>, Error<R>>;
 }

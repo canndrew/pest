@@ -13,6 +13,7 @@ extern crate pest_grammars;
 
 use std::fs::File;
 use std::io::Read;
+use std::sync::Arc;
 
 use pest::Parser;
 
@@ -22,7 +23,7 @@ use pest_grammars::toml::*;
 fn boolean() {
     parses_to! {
         parser: TomlParser,
-        input: "true",
+        input: Arc::from("true"),
         rule: Rule::boolean,
         tokens: [
             boolean(0, 4)
@@ -34,7 +35,7 @@ fn boolean() {
 fn integer() {
     parses_to! {
         parser: TomlParser,
-        input: "+1_000_0",
+        input: Arc::from("+1_000_0"),
         rule: Rule::integer,
         tokens: [
             integer(0, 8)
@@ -46,7 +47,7 @@ fn integer() {
 fn float() {
     parses_to! {
         parser: TomlParser,
-        input: "+1_0.0_1e+100",
+        input: Arc::from("+1_0.0_1e+100"),
         rule: Rule::float,
         tokens: [
             float(0, 13)
@@ -58,7 +59,7 @@ fn float() {
 fn partial_time() {
     parses_to! {
         parser: TomlParser,
-        input: "12:34:56.000",
+        input: Arc::from("12:34:56.000"),
         rule: Rule::partial_time,
         tokens: [
             partial_time(0, 12, [
@@ -75,7 +76,7 @@ fn partial_time() {
 fn full_date() {
     parses_to! {
         parser: TomlParser,
-        input: "2001-12-13",
+        input: Arc::from("2001-12-13"),
         rule: Rule::full_date,
         tokens: [
             full_date(0, 10, [
@@ -91,7 +92,7 @@ fn full_date() {
 fn local_date_time() {
     parses_to! {
         parser: TomlParser,
-        input: "2001-12-13T12:34:56.000",
+        input: Arc::from("2001-12-13T12:34:56.000"),
         rule: Rule::local_date_time,
         tokens: [
             local_date_time(0, 23, [
@@ -115,7 +116,7 @@ fn local_date_time() {
 fn date_time() {
     parses_to! {
         parser: TomlParser,
-        input: "2001-12-13T12:34:56.000Z",
+        input: Arc::from("2001-12-13T12:34:56.000Z"),
         rule: Rule::date_time,
         tokens: [
             date_time(0, 24, [
@@ -142,7 +143,7 @@ fn date_time() {
 fn literal() {
     parses_to! {
         parser: TomlParser,
-        input: "'\"'",
+        input: Arc::from("'\"'"),
         rule: Rule::literal,
         tokens: [
             literal(0, 3)
@@ -154,7 +155,7 @@ fn literal() {
 fn multi_line_literal() {
     parses_to! {
         parser: TomlParser,
-        input: "'''\"'''",
+        input: Arc::from("'''\"'''"),
         rule: Rule::multi_line_literal,
         tokens: [
             multi_line_literal(0, 7)
@@ -166,7 +167,7 @@ fn multi_line_literal() {
 fn string() {
     parses_to! {
         parser: TomlParser,
-        input: r#""\n""#,
+        input: Arc::from(r#""\n""#),
         rule: Rule::string,
         tokens: [
             string(0, 4)
@@ -178,7 +179,7 @@ fn string() {
 fn multi_line_string() {
     parses_to! {
         parser: TomlParser,
-        input: r#"""" \n """"#,
+        input: Arc::from(r#"""" \n """"#),
         rule: Rule::multi_line_string,
         tokens: [
             multi_line_string(0, 10)
@@ -190,7 +191,7 @@ fn multi_line_string() {
 fn array_empty() {
     parses_to! {
         parser: TomlParser,
-        input: "[ ]",
+        input: Arc::from("[ ]"),
         rule: Rule::array,
         tokens: [
             array(0, 3)
@@ -202,7 +203,7 @@ fn array_empty() {
 fn array() {
     parses_to! {
         parser: TomlParser,
-        input: "['', 2017-08-09, 20.0]",
+        input: Arc::from("['', 2017-08-09, 20.0]"),
         rule: Rule::array,
         tokens: [
             array(0, 22, [
@@ -222,7 +223,7 @@ fn array() {
 fn inline_table() {
     parses_to! {
         parser: TomlParser,
-        input: "{ a = 'b' }",
+        input: Arc::from("{ a = 'b' }"),
         rule: Rule::inline_table,
         tokens: [
             inline_table(0, 11, [
@@ -239,7 +240,7 @@ fn inline_table() {
 fn table() {
     parses_to! {
         parser: TomlParser,
-        input: "[a.b]\nc = 'd'",
+        input: Arc::from("[a.b]\nc = 'd'"),
         rule: Rule::table,
         tokens: [
             table(0, 13, [
@@ -258,7 +259,7 @@ fn table() {
 fn array_table() {
     parses_to! {
         parser: TomlParser,
-        input: "[[a.b]]\nc = 'd'",
+        input: Arc::from("[[a.b]]\nc = 'd'"),
         rule: Rule::array_table,
         tokens: [
             array_table(0, 15, [
@@ -280,5 +281,5 @@ fn examples() {
 
     file.read_to_string(&mut data).unwrap();
 
-    TomlParser::parse(Rule::toml, &data).unwrap();
+    TomlParser::parse(Rule::toml, Arc::from(data)).unwrap();
 }
