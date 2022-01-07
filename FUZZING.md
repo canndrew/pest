@@ -1,7 +1,7 @@
-# Fuzzing pest
+# Fuzzing fuel_pest
 
-There are currently fuzzing targets set up on two of the crates used in `pest`:
-`pest_grammars` and `pest_meta`. These targets serve to [fuzz test] the parsing
+There are currently fuzzing targets set up on two of the crates used in `fuel_pest`:
+`fuel_pest_grammars` and `fuel_pest_meta`. These targets serve to [fuzz test] the parsing
 provided by these crates by providing random inputs and searching for crashes.
 The [cargo-fuzz] tool is used to run `libFuzzer` on the targets.
 
@@ -12,21 +12,21 @@ The [cargo-fuzz] tool is used to run `libFuzzer` on the targets.
 
 Each of the crates fuzzed has its targets held in the `fuzz` directory. 
 
-### `pest_meta`
+### `fuel_pest_meta`
 
 - `parser`
 
 There is a single fuzzing target for this crate that interacts with
-`pest_meta::parser::parse`, a function that parses pest grammar files.
+`fuel_pest_meta::parser::parse`, a function that parses fuel_pest grammar files.
 
-### `pest_grammars`
+### `fuel_pest_grammars`
 
 - `toml`
 - `json`
 
 There are two fuzzing targets for this crate: one tests the json grammar in the
 `json` module and the other tests the toml grammar in the `toml` module. They
-interact directly with the `pest::Parser::parse` function provided by derived
+interact directly with the `fuel_pest::Parser::parse` function provided by derived
 on the respective Parsers in each module.
 
 ## Running a target

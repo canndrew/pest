@@ -1,0 +1,28 @@
+[package]
+name = "fuel_generator"
+description = "fuel_pest code generator"
+version = "2.1.4"
+authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
+homepage = "https://fuel_pest-parser.github.io/"
+repository = "https://github.com/fuel_pest-parser/fuel_pest"
+documentation = "https://docs.rs/fuel_pest"
+keywords = ["fuel_pest", "generator"]
+categories = ["parsing"]
+license = "MIT/Apache-2.0"
+readme = "_README.md"
+
+[features]
+default = ["std"]
+std = ["fuel-pest/std"]
+
+[dependencies]
+fuel-pest = { path = "../fuel-pest", version = "2.1.0", default-features = false }
+fuel_pest_meta = { path = "../fuel-meta", version = "2.1.0" }
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = "1.0"
+
+[badges]
+codecov = { repository = "fuel_pest-parser/fuel_pest" }
+maintenance = { status = "actively-developed" }
+travis-ci = { repository = "fuel_pest-parser/fuel_pest" }

@@ -1,0 +1,21 @@
+[package]
+name = "fuel_pest_grammars"
+description = "fuel_pest popular grammar implementations"
+version = "2.1.0"
+authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
+homepage = "https://fuel_pest-parser.github.io/"
+repository = "https://github.com/fuel_pest-parser/fuel_pest"
+documentation = "https://docs.rs/fuel_pest"
+keywords = ["fuel_pest", "parser", "peg", "grammar"]
+categories = ["parsing"]
+license = "MIT/Apache-2.0"
+readme = "_README.md"
+
+[dependencies]
+fuel-pest = { path = "../fuel-pest", version = "2.1.0" }
+fuel_pest_derive = { path = "../fuel-derive", version = "2.1.0" }
+
+[badges]
+codecov = { repository = "fuel_pest-parser/fuel_pest" }
+maintenance = { status = "actively-developed" }
+travis-ci = { repository = "fuel_pest-parser/fuel_pest" }

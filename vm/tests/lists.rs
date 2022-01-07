@@ -1,4 +1,4 @@
-// pest. The Elegant Parser
+// fuel_pest. The Elegant Parser
 // Copyright (c) 2018 Dragoș Tiselice
 //
 // Licensed under the Apache License, Version 2.0
@@ -7,14 +7,14 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-extern crate pest;
-extern crate pest_meta;
+extern crate fuel_pest;
+extern crate fuel_pest_meta;
 #[macro_use]
-extern crate pest_vm;
+extern crate fuel_pest_vm;
 
-use pest_meta::parser::Rule;
-use pest_meta::{optimizer, parser};
-use pest_vm::Vm;
+use fuel_pest_meta::parser::Rule;
+use fuel_pest_meta::{optimizer, parser};
+use fuel_pest_vm::Vm;
 
 const GRAMMAR: &'static str = include_str!("lists.pest");
 

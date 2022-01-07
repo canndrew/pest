@@ -1,4 +1,4 @@
-// pest. The Elegant Parser
+// fuel_pest. The Elegant Parser
 // Copyright (c) 2018 Dragoș Tiselice
 //
 // Licensed under the Apache License, Version 2.0
@@ -15,7 +15,7 @@ macro_rules! consumes_to {
         let expected = format!("expected Start {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $start);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::Start { rule, pos } => {
+            ::fuel_pest::Token::Start { rule, pos } => {
                 let message = format!("{} but found Start {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -29,7 +29,7 @@ macro_rules! consumes_to {
         let expected = format!("expected End {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $end);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::End { rule, pos } => {
+            ::fuel_pest::Token::End { rule, pos } => {
                 let message = format!("{} but found End {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -46,7 +46,7 @@ macro_rules! consumes_to {
         let expected = format!("expected Start {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $start);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::Start { rule, pos } => {
+            ::fuel_pest::Token::Start { rule, pos } => {
                 let message = format!("{} but found Start {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -60,7 +60,7 @@ macro_rules! consumes_to {
         let expected = format!("expected End {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $end);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::End { rule, pos } => {
+            ::fuel_pest::Token::End { rule, pos } => {
                 let message = format!("{} but found End {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -78,7 +78,7 @@ macro_rules! consumes_to {
         let expected = format!("expected Start {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $start);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::Start { rule, pos } => {
+            ::fuel_pest::Token::Start { rule, pos } => {
                 let message = format!("{} but found Start {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -94,7 +94,7 @@ macro_rules! consumes_to {
         let expected = format!("expected End {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $end);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::End { rule, pos } => {
+            ::fuel_pest::Token::End { rule, pos } => {
                 let message = format!("{} but found End {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -112,7 +112,7 @@ macro_rules! consumes_to {
         let expected = format!("expected Start {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $start);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::Start { rule, pos } => {
+            ::fuel_pest::Token::Start { rule, pos } => {
                 let message = format!("{} but found Start {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -128,7 +128,7 @@ macro_rules! consumes_to {
         let expected = format!("expected End {{ rule: {}, pos: Position {{ pos: {} }} }}",
                                stringify!($name), $end);
         match $tokens.next().expect(&format!("{} but found nothing", expected)) {
-            ::pest::Token::End { rule, pos } => {
+            ::fuel_pest::Token::End { rule, pos } => {
                 let message = format!("{} but found End {{ rule: {}, pos: Position {{ {} }} }}",
                                       expected, rule, pos.pos());
 
@@ -164,8 +164,8 @@ macro_rules! parses_to {
 
                     match (first, second) {
                         (
-                            &::pest::Token::Start { rule: ref first_rule, .. },
-                            &::pest::Token::End { rule: ref second_rule, .. }
+                            &::fuel_pest::Token::Start { rule: ref first_rule, .. },
+                            &::fuel_pest::Token::End { rule: ref second_rule, .. }
                         ) => {
                             assert!(
                                 format!("{}", first_rule) == "EOI",
@@ -198,7 +198,7 @@ macro_rules! fails_with {
             let error = vm.parse($rule, $string).unwrap_err();
 
             match error.variant {
-                ::pest::error::ErrorVariant::ParsingError {
+                ::fuel_pest::error::ErrorVariant::ParsingError {
                     positives,
                     negatives,
                 } => {
@@ -212,7 +212,7 @@ macro_rules! fails_with {
             };
 
             match error.location {
-                ::pest::error::InputLocation::Pos(pos) => assert_eq!(pos, $pos),
+                ::fuel_pest::error::InputLocation::Pos(pos) => assert_eq!(pos, $pos),
                 _ => unreachable!(),
             }
         }

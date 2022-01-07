@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="https://raw.github.com/pest-parser/pest/master/pest-logo.svg?sanitize=true" width="80%"/>
+  <img src="https://raw.github.com/fuel_pest-parser/fuel_pest/master/fuel_pest-logo.svg?sanitize=true" width="80%"/>
 </p>
 
-# pest. The Elegant Parser
+# fuel_pest. The Elegant Parser
 
-[![Join the chat at https://gitter.im/dragostis/pest](https://badges.gitter.im/dragostis/pest.svg)](https://gitter.im/dragostis/pest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Book](https://img.shields.io/badge/book-WIP-4d76ae.svg)](https://pest-parser.github.io/book)
-[![Docs](https://docs.rs/pest/badge.svg)](https://docs.rs/pest)
+[![Join the chat at https://gitter.im/dragostis/fuel_pest](https://badges.gitter.im/dragostis/fuel_pest.svg)](https://gitter.im/dragostis/fuel_pest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Book](https://img.shields.io/badge/book-WIP-4d76ae.svg)](https://fuel_pest-parser.github.io/book)
+[![Docs](https://docs.rs/fuel_pest/badge.svg)](https://docs.rs/fuel_pest)
 
-[![Build Status](https://travis-ci.org/pest-parser/pest.svg?branch=master)](https://travis-ci.org/pest-parser/pest)
-[![codecov](https://codecov.io/gh/pest-parser/pest/branch/master/graph/badge.svg)](https://codecov.io/gh/pest-parser/pest)
-[![Fuzzit Status](https://app.fuzzit.dev/badge?org_id=pest-parser)](https://app.fuzzit.dev/orgs/pest-parser/dashboard)
-[![Crates.io](https://img.shields.io/crates/d/pest.svg)](https://crates.io/crates/pest)
-[![Crates.io](https://img.shields.io/crates/v/pest.svg)](https://crates.io/crates/pest)
+[![Build Status](https://travis-ci.org/fuel_pest-parser/fuel_pest.svg?branch=master)](https://travis-ci.org/fuel_pest-parser/fuel_pest)
+[![codecov](https://codecov.io/gh/fuel_pest-parser/fuel_pest/branch/master/graph/badge.svg)](https://codecov.io/gh/fuel_pest-parser/fuel_pest)
+[![Fuzzit Status](https://app.fuzzit.dev/badge?org_id=fuel_pest-parser)](https://app.fuzzit.dev/orgs/fuel_pest-parser/dashboard)
+[![Crates.io](https://img.shields.io/crates/d/fuel_pest.svg)](https://crates.io/crates/fuel_pest)
+[![Crates.io](https://img.shields.io/crates/v/fuel_pest.svg)](https://crates.io/crates/fuel_pest)
 
-pest is a general purpose parser written in Rust with a focus on accessibility,
+fuel_pest is a general purpose parser written in Rust with a focus on accessibility,
 correctness, and performance. It uses parsing expression grammars
 (or [PEG]) as input, which are similar in spirit to regular expressions, but
 which offer the enhanced expressivity needed to parse complex languages.
@@ -23,7 +23,7 @@ which offer the enhanced expressivity needed to parse complex languages.
 
 ## Getting started
 
-The recommended way to start parsing with pest is to read the official [book].
+The recommended way to start parsing with fuel_pest is to read the official [book].
 
 Other helpful resources:
 
@@ -31,10 +31,10 @@ Other helpful resources:
 * play with grammars and share them on our [fiddle]
 * leave feedback, ask questions, or greet us on [Gitter]
 
-[book]: https://pest-parser.github.io/book
-[docs.rs]: https://docs.rs/pest
-[fiddle]: https://pest-parser.github.io/#editor
-[Gitter]: https://gitter.im/dragostis/pest
+[book]: https://fuel_pest-parser.github.io/book
+[docs.rs]: https://docs.rs/fuel_pest
+[fiddle]: https://fuel_pest-parser.github.io/#editor
+[Gitter]: https://gitter.im/dragostis/fuel_pest
 
 ## Example
 
@@ -85,11 +85,11 @@ The grammar can be used to derive a `Parser` implementation automatically.
 Parsing returns an iterator of nested token pairs:
 
 ```rust
-extern crate pest;
+extern crate fuel_pest;
 #[macro_use]
-extern crate pest_derive;
+extern crate fuel_pest_derive;
 
-use pest::Parser;
+use fuel_pest::Parser;
 
 #[derive(Parser)]
 #[grammar = "ident.pest"]
@@ -138,9 +138,9 @@ Digit:   2
 * Custom errors
 * Runs on stable Rust
 
-## Projects using pest
+## Projects using fuel_pest
 
-* [pest_meta](https://github.com/pest-parser/pest/blob/master/meta/src/grammar.pest) (bootstrapped)
+* [fuel_pest_meta](https://github.com/fuel_pest-parser/fuel_pest/blob/master/meta/src/grammar.pest) (bootstrapped)
 * [AshPaper](https://github.com/shnewto/ashpaper)
 * [brain](https://github.com/brain-lang/brain)
 * [cicada](https://github.com/mitnk/cicada)
@@ -172,4 +172,4 @@ Digit:   2
 ## Special thanks
 
 A special round of applause goes to prof. Marius Minea for his guidance and all
-pest contributors, some of which being none other than my friends.
+fuel_pest contributors, some of which being none other than my friends.

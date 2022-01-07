@@ -1,21 +1,21 @@
 [package]
-name = "pest_vm"
-description = "pest grammar virtual machine"
+name = "fuel_pest_vm"
+description = "fuel_pest grammar virtual machine"
 version = "2.1.0"
 authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
-homepage = "https://pest-parser.github.io/"
-repository = "https://github.com/pest-parser/pest"
-documentation = "https://docs.rs/pest"
-keywords = ["pest", "vm"]
+homepage = "https://fuel_pest-parser.github.io/"
+repository = "https://github.com/fuel_pest-parser/fuel_pest"
+documentation = "https://docs.rs/fuel_pest"
+keywords = ["fuel_pest", "vm"]
 categories = ["parsing"]
 license = "MIT/Apache-2.0"
 readme = "_README.md"
 
 [dependencies]
-pest = { path = "../pest", version = "2.1.0" }
-pest_meta = { path = "../meta", version = "2.1.0" }
+fuel-pest = { path = "../fuel-pest", version = "2.1.0" }
+fuel_pest_meta = { path = "../fuel-meta", version = "2.1.0" }
 
 [badges]
-codecov = { repository = "pest-parser/pest" }
+codecov = { repository = "fuel_pest-parser/fuel_pest" }
 maintenance = { status = "actively-developed" }
-travis-ci = { repository = "pest-parser/pest" }
+travis-ci = { repository = "fuel_pest-parser/fuel_pest" }

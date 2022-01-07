@@ -9,5 +9,5 @@ curl -LO https://www.unicode.org/Public/zipped/latest/UCD.zip
 unzip UCD.zip
 cd ../../
 
-ucd-generate property-bool    --trie-set ./target/ucd/ > ./pest/src/unicode/binary.rs
-ucd-generate general-category --trie-set ./target/ucd/ > ./pest/src/unicode/category.rs
+ucd-generate property-bool    --trie-set ./target/ucd/ > ./fuel-pest/src/unicode/binary.rs
+ucd-generate general-category --trie-set ./target/ucd/ > ./fuel-pest/src/unicode/category.rs

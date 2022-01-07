@@ -1,4 +1,4 @@
-// pest. The Elegant Parser
+// fuel_pest. The Elegant Parser
 // Copyright (c) 2018 Dragoș Tiselice
 //
 // Licensed under the Apache License, Version 2.0
@@ -7,15 +7,15 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-extern crate pest;
-extern crate pest_meta;
+extern crate fuel_pest;
+extern crate fuel_pest_meta;
 
-use pest::error::Error;
-use pest::iterators::Pairs;
-use pest::unicode;
-use pest::{Atomicity, MatchDir, ParseResult, ParserState};
-use pest_meta::ast::RuleType;
-use pest_meta::optimizer::{OptimizedExpr, OptimizedRule};
+use fuel_pest::error::Error;
+use fuel_pest::iterators::Pairs;
+use fuel_pest::unicode;
+use fuel_pest::{Atomicity, MatchDir, ParseResult, ParserState};
+use fuel_pest_meta::ast::RuleType;
+use fuel_pest_meta::optimizer::{OptimizedExpr, OptimizedRule};
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -37,7 +37,7 @@ impl Vm {
         rule: &'a str,
         input: &'i str,
     ) -> Result<Pairs<&str>, Error<&str>> {
-        pest::state(Arc::from(input), |state| self.parse_rule(rule, state))
+        fuel_pest::state(Arc::from(input), |state| self.parse_rule(rule, state))
     }
 
     fn parse_rule<'a, 'i>(

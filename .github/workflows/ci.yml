@@ -1,4 +1,4 @@
-name: pest Continuous Integration
+name: fuel-pest Continuous Integration
 
 on:
   push:
@@ -11,6 +11,8 @@ on:
       - staging
       - trying
       - master
+  release:
+    types: [published]
 
 jobs:
   testing:
@@ -27,16 +29,6 @@ jobs:
           default: true
       - name: Install gcc
         run: sudo apt-get update && sudo apt-get install -y gcc
-      - name: Bootstraping Grammars - Building
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --package pest_bootstrap
-      - name: Bootstraping Grammars - Executing
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: --package pest_bootstrap
       - name: Cargo Build
         uses: actions-rs/cargo@v1
         with:
@@ -62,108 +54,27 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
-
-  dependency:
-    name: Minimal Versions Testing
+            
+  publish:
+    # Only do this job if publishing a release
+    if: github.event_name == 'release' && github.event.action == 'published'
     runs-on: ubuntu-latest
-    steps:
-    - name: Checkout source code
-      uses: actions/checkout@v2
-    - name: Install gcc
-      run: sudo apt-get update && sudo apt-get install -y gcc
-    - name: Install Rust Nightly
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly-2021-01-01
-        default: true
-        profile: minimal
-    - name: Bootstraping Grammars - Building
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --package pest_bootstrap
-    - name: Bootstraping Grammars - Executing
-      uses: actions-rs/cargo@v1
-      with:
-        command: run
-        args: --package pest_bootstrap
-    - name: Cargo minimal-versions
-      run: cargo -Z minimal-versions generate-lockfile
-    - name: Cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all --verbose
 
-  coverage:
-    name: Test Coverage
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Install Rust Nightly
+
+      - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-08-01
-          profile: minimal
-          components: llvm-tools-preview
-          default: true
-      - name: Bootstraping Grammars - Building
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --package pest_bootstrap
-      - name: Bootstraping Grammars - Executing
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: --package pest_bootstrap
-      - name: Install cargo-llvm-cov
-        run: curl -LsSf https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-      - name: Generate code coverage
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-      - name: Upload Results to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          file: lcov.info
-          flags: unittests
-          name: pest-ci-coverage
-          fail_ci_if_error: false
-          verbose: true
+          toolchain: stable
+          override: true
 
-# fuzzing: # fuzzit is now offline
-#   name: Fuzz Testing
-#   runs-on: ubuntu-latest
-#   if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-#   steps:
-#     - name: Checkout source code
-#       uses: actions/checkout@v2
-#     - name: Install Rust Nightly
-#       uses: actions-rs/toolchain@v1
-#       with:
-#         toolchain: nightly
-#         default: true
-#     - name: Install Cargo Fuzz
-#       uses: actions-rs/install@v0.1
-#       with:
-#         crate: cargo-fuzz
-#         version: latest
-#         use-tool-cache: true
-#     - name: Bootstraping Grammars - Building
-#       uses: actions-rs/cargo@v1
-#       with:
-#         command: build
-#         args: --package pest_bootstrap
-#     - name: Bootstraping Grammars - Executing
-#       uses: actions-rs/cargo@v1
-#       with:
-#         command: run
-#         args: --package pest_bootstrap
-#     - name: Fuzz Testing - Regressions
-#       env:
-#         FUZZIT_API_KEY: ${{ secrets.FuzzitApiKey }}
-#       run: ./fuzzit.sh local-regression
-#     - name: Fuzz Testing - Fuzzing
-#       env:
-#         FUZZIT_API_KEY: ${{ secrets.FuzzitApiKey }}
-#       run: ./fuzzit.sh fuzzing
+      - name: Verify tag version
+        run: |
+          cargo install toml-cli
+          ./.github/workflows/scripts/verify_tag.sh ${{ github.ref_name }} Cargo.toml
+      - name: Publish crate
+        uses: katyo/publish-crates@v1
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
