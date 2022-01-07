@@ -1,7 +1,7 @@
 [package]
 name = "fuel_pest_derive"
 description = "fuel_pest's derive macro"
-version = "2.1.0"
+version = "3.0.3"
 authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
 homepage = "https://fuel_pest-parser.github.io/"
 repository = "https://github.com/fuel_pest-parser/fuel_pest"
@@ -21,8 +21,8 @@ std = ["fuel-pest/std", "fuel_generator/std"]
 
 [dependencies]
 # for tests, included transitively anyway
-fuel-pest = { path = "../fuel-pest", version = "2.1.0", default-features = false }
-fuel_generator = { path = "../fuel-generator", version = "2.1.0", default-features = false }
+fuel-pest = { path = "../fuel-pest", version = "3.0.3", default-features = false }
+fuel_generator = { path = "../fuel-generator", version = "3.0.3", default-features = false }
 
 [badges]
 codecov = { repository = "fuel_pest-parser/fuel_pest" }

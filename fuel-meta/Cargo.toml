@@ -1,7 +1,7 @@
 [package]
 name = "fuel_pest_meta"
 description = "fuel_pest meta language parser and validator"
-version = "2.1.3"
+version = "3.0.3"
 authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
 homepage = "https://fuel_pest-parser.github.io/"
 repository = "https://github.com/fuel_pest-parser/fuel_pest"
@@ -15,7 +15,7 @@ include = ["Cargo.toml", "src/**/*", "src/grammar.rs", "_README.md", "LICENSE-*"
 
 [dependencies]
 maplit = "1.0"
-fuel-pest = { path = "../fuel-pest", version = "2.1.0" }
+fuel-pest = { path = "../fuel-pest", version = "3.0.3" }
 
 [badges]
 codecov = { repository = "fuel_pest-parser/fuel_pest" }

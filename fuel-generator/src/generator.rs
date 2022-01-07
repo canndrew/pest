@@ -93,7 +93,7 @@ pub fn generate(
     }
 }
 
-// Note: All builtin rules should be validated as fuel_pest builtins in meta/src/validator.rs.
+// Note: All builtin rules should be validated as fuel_pest builtins in fuel-meta/src/validator.rs.
 // Some should also be keywords.
 fn generate_builtin_rules() -> Vec<(&'static str, TokenStream)> {
     let mut builtins = Vec::new();

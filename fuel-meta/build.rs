@@ -40,7 +40,7 @@ fn main() {
         if !grammar_rs_path.exists()
             || old_hash.as_ref().map(|it| it.trim()) != Some(current_hash.trim())
         {
-            println!("Bootstrapping `meta/src/grammar.rs`");
+            println!("Bootstrapping `fuel-meta/src/grammar.rs`");
 
             let mut hash_file = File::create(hash_path).unwrap();
             writeln!(hash_file, "{}", current_hash).unwrap();
@@ -61,7 +61,7 @@ fn main() {
                 panic!("Bootstrap failed");
             }
         } else {
-            println!("       Fresh `meta/src/grammar.rs`");
+            println!("       Fresh `fuel-meta/src/grammar.rs`");
         }
     } else {
         assert!(

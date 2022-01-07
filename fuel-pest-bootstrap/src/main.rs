@@ -8,11 +8,11 @@ use std::{fs::File, io::prelude::*, path::Path};
 fn main() {
     let fuel_pest = Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../meta/src/grammar.pest"
+        "/../fuel-meta/src/grammar.pest"
     ));
     let rs = Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../meta/src/grammar.rs"
+        "/../fuel-meta/src/grammar.rs"
     ));
 
     let derived = {
